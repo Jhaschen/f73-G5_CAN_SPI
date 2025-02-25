@@ -110,7 +110,8 @@ DEBUG = dwarf-2
 #     Each directory must be seperated by a space.
 #     Use forward slashes for directory separators.
 #     For a directory that has spaces, enclose it in quotes.
-EXTRAINCDIRS = avr-can-lib
+EXTRAINCDIRS = avr-can-rfid-lib 
+#EXTRAINCDIRS = avr-can-lib 
 
 # Compiler flag to set the C Standard level.
 #     c89   = "ANSI" C
@@ -256,7 +257,8 @@ EXTMEMOPTS =
 LDFLAGS = -Wl,-Map=$(TARGET).map,--cref,--gc-sections
 LDFLAGS += $(EXTMEMOPTS)
 LDFLAGS += $(PRINTF_LIB) $(SCANF_LIB) $(MATH_LIB)
-LDFLAGS += -L./avr-can-lib/src -lcan	#CAN library
+LDFLAGS += -L./avr-can-rfid-lib/src -lrfid_can	#CAN RFID library
+#LDFLAGS += -L./avr-can-lib/src -lcan	#CAN library
 #LDFLAGS += -T linker_script.x
 
 
