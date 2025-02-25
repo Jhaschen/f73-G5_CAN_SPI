@@ -1,0 +1,228 @@
+   1               		.file	"spi.c"
+   2               	__SP_H__ = 0x3e
+   3               	__SP_L__ = 0x3d
+   4               	__SREG__ = 0x3f
+   5               	__tmp_reg__ = 0
+   6               	__zero_reg__ = 1
+   7               		.text
+   8               	.Ltext0:
+   9               		.cfi_sections	.debug_frame
+  10               	.global	mcp2515_spi_init
+  12               	mcp2515_spi_init:
+  13               	.LFB19:
+  14               		.file 1 "spi.c"
+   1:spi.c         **** // ----------------------------------------------------------------------------
+   2:spi.c         **** /*
+   3:spi.c         ****  * Copyright (c) 2008 Florian Kristen, Fabian Greif
+   4:spi.c         ****  *  All rights reserved.
+   5:spi.c         ****  *
+   6:spi.c         ****  * Redistribution and use in source and binary forms, with or without
+   7:spi.c         ****  * modification, are permitted provided that the following conditions
+   8:spi.c         ****  * are met:
+   9:spi.c         ****  * 1. Redistributions of source code must retain the above copyright
+  10:spi.c         ****  *    notice, this list of conditions and the following disclaimer.
+  11:spi.c         ****  * 2. Redistributions in binary form must reproduce the above copyright
+  12:spi.c         ****  *    notice, this list of conditions and the following disclaimer in the
+  13:spi.c         ****  *    documentation and/or other materials provided with the distribution.
+  14:spi.c         ****  *
+  15:spi.c         ****  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+  16:spi.c         ****  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  17:spi.c         ****  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+  18:spi.c         ****  * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+  19:spi.c         ****  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+  20:spi.c         ****  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+  21:spi.c         ****  * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+  22:spi.c         ****  * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+  23:spi.c         ****  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+  24:spi.c         ****  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+  25:spi.c         ****  * SUCH DAMAGE.
+  26:spi.c         ****  *
+  27:spi.c         ****  * $Id: spi.c 6802 2008-11-12 10:25:05Z fabian $
+  28:spi.c         ****  */
+  29:spi.c         **** // ----------------------------------------------------------------------------
+  30:spi.c         **** 
+  31:spi.c         **** #include "mcp2515_private.h"
+  32:spi.c         **** #ifdef	SUPPORT_FOR_MCP2515__
+  33:spi.c         **** 
+  34:spi.c         **** #include "spi.h"
+  35:spi.c         **** 
+  36:spi.c         **** #ifdef	SPI_PRESCALER
+  37:spi.c         **** 	#if (SPI_PRESCALER == 2) || (SPI_PRESCALER == 8) || (SPI_PRESCALER == 32) || (SPI_PRESCALER == 64)
+  38:spi.c         **** 		#define	R_SPSR	(1<<SPI2X)
+  39:spi.c         **** 		#define SPI_PRESCALER_ 	(SPI_PRESCALER * 2)
+  40:spi.c         **** 	#else
+  41:spi.c         **** 		#define	R_SPSR	0
+  42:spi.c         **** 		#define	SPI_PRESCALER_	SPI_PRESCALER
+  43:spi.c         **** 	#endif
+  44:spi.c         **** 	
+  45:spi.c         **** 	#define	SPI_CLOCK_RATE_BIT0		(1<<SPR0)
+  46:spi.c         **** 	#define	SPI_CLOCK_RATE_BIT1		(1<<SPR1)
+  47:spi.c         **** 	
+  48:spi.c         **** 	#if (SPI_PRESCALER_ == 4)
+  49:spi.c         **** 		#define	R_SPCR	0
+  50:spi.c         **** 	#elif (SPI_PRESCALER_ == 16)
+  51:spi.c         **** 		#define	R_SPCR	SPI_CLOCK_RATE_BIT0
+  52:spi.c         **** 	#elif (SPI_PRESCALER_ == 64)
+  53:spi.c         **** 		#define	R_SPCR	SPI_CLOCK_RATE_BIT1
+  54:spi.c         **** 	#elif (SPI_PRESCALER_ == 128)
+  55:spi.c         **** 		#define	R_SPCR	SPI_CLOCK_RATE_BIT1 | SPI_CLOCK_RATE_BIT0
+  56:spi.c         **** 	#else
+  57:spi.c         **** 		#error	 SPI_PRESCALER must be one of the values of 2^n with n = 1..7!
+  58:spi.c         **** 	#endif
+  59:spi.c         **** #else
+  60:spi.c         **** 	#error	SPI_PRESCALER not defined!
+  61:spi.c         **** #endif
+  62:spi.c         **** 
+  63:spi.c         **** 
+  64:spi.c         **** // ----------------------------------------------------------------------------
+  65:spi.c         **** void mcp2515_spi_init(void)
+  66:spi.c         **** {
+  15               		.loc 1 66 1 view -0
+  16               		.cfi_startproc
+  17               	/* prologue: function */
+  18               	/* frame size = 0 */
+  19               	/* stack size = 0 */
+  20               	.L__stack_usage = 0
+  67:spi.c         **** 	#ifndef USE_SOFTWARE_SPI
+  68:spi.c         **** 		// Aktivieren des SPI Master Interfaces
+  69:spi.c         **** 		SPCR = (1<<SPE)|(1<<MSTR) | R_SPCR;
+  21               		.loc 1 69 3 view .LVU1
+  22               		.loc 1 69 8 is_stmt 0 view .LVU2
+  23 0000 81E5      		ldi r24,lo8(81)
+  24 0002 8DB9      		out 0xd,r24
+  70:spi.c         **** 		SPSR = R_SPSR;
+  25               		.loc 1 70 3 is_stmt 1 view .LVU3
+  26               		.loc 1 70 8 is_stmt 0 view .LVU4
+  27 0004 81E0      		ldi r24,lo8(1)
+  28 0006 8EB9      		out 0xe,r24
+  29               	/* epilogue start */
+  71:spi.c         **** 	#endif
+  72:spi.c         **** }
+  30               		.loc 1 72 1 view .LVU5
+  31 0008 0895      		ret
+  32               		.cfi_endproc
+  33               	.LFE19:
+  35               	.global	spi_putc
+  37               	spi_putc:
+  38               	.LVL0:
+  39               	.LFB20:
+  73:spi.c         **** 
+  74:spi.c         **** // ----------------------------------------------------------------------------
+  75:spi.c         **** // Schreibt/liest ein Byte ueber den Hardware SPI Bus
+  76:spi.c         **** 
+  77:spi.c         **** uint8_t spi_putc(uint8_t data)
+  78:spi.c         **** {
+  40               		.loc 1 78 1 is_stmt 1 view -0
+  41               		.cfi_startproc
+  42               	/* prologue: function */
+  43               	/* frame size = 0 */
+  44               	/* stack size = 0 */
+  45               	.L__stack_usage = 0
+  79:spi.c         **** 	#ifdef	USE_SOFTWARE_SPI
+  80:spi.c         **** 	
+  81:spi.c         **** 	uint8_t data_in = 0;
+  82:spi.c         **** 	
+  83:spi.c         **** 	RESET(P_SCK);
+  84:spi.c         **** 	for (uint8_t i=0;i<8;i++)
+  85:spi.c         **** 	{
+  86:spi.c         **** 		data_in <<= 1;
+  87:spi.c         **** 		
+  88:spi.c         **** 		if (data & 0x80)
+  89:spi.c         **** 			SET(P_MOSI);
+  90:spi.c         **** 		else
+  91:spi.c         **** 			RESET(P_MOSI);
+  92:spi.c         **** 		
+  93:spi.c         **** 		SET(P_SCK);
+  94:spi.c         **** 		_delay_us(2);
+  95:spi.c         **** 		
+  96:spi.c         **** 		if (IS_SET(P_MISO))
+  97:spi.c         **** 			data_in |= 1;
+  98:spi.c         **** 		
+  99:spi.c         **** 		data <<= 1;
+ 100:spi.c         **** 		
+ 101:spi.c         **** 		RESET(P_SCK);
+ 102:spi.c         **** 		_delay_us(2);
+ 103:spi.c         **** 	}
+ 104:spi.c         **** 	
+ 105:spi.c         **** 	return data_in;
+ 106:spi.c         **** 	
+ 107:spi.c         **** 	#else
+ 108:spi.c         **** 	
+ 109:spi.c         **** 	// put byte in send-buffer
+ 110:spi.c         **** 	SPDR = data;
+  46               		.loc 1 110 2 view .LVU7
+  47               		.loc 1 110 7 is_stmt 0 view .LVU8
+  48 000a 8FB9      		out 0xf,r24
+ 111:spi.c         **** 	
+ 112:spi.c         **** 	// wait until byte was send
+ 113:spi.c         **** 	while( !( SPSR & (1<<SPIF) ) )
+  49               		.loc 1 113 2 is_stmt 1 view .LVU9
+  50               	.L3:
+ 114:spi.c         **** 		;
+  51               		.loc 1 114 3 discriminator 1 view .LVU10
+ 113:spi.c         **** 		;
+  52               		.loc 1 113 7 discriminator 1 view .LVU11
+  53 000c 779B      		sbis 0xe,7
+  54 000e 00C0      		rjmp .L3
+ 115:spi.c         **** 	
+ 116:spi.c         **** 	return SPDR;
+  55               		.loc 1 116 2 view .LVU12
+  56               		.loc 1 116 9 is_stmt 0 view .LVU13
+  57 0010 8FB1      		in r24,0xf
+  58               	.LVL1:
+  59               	/* epilogue start */
+ 117:spi.c         **** 	
+ 118:spi.c         **** 	#endif
+ 119:spi.c         **** }
+  60               		.loc 1 119 1 view .LVU14
+  61 0012 0895      		ret
+  62               		.cfi_endproc
+  63               	.LFE20:
+  65               	.Letext0:
+  66               		.file 2 "/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/stdint.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 spi.c
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccO2qvuY.s:2      *ABS*:000000000000003e __SP_H__
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccO2qvuY.s:3      *ABS*:000000000000003d __SP_L__
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccO2qvuY.s:4      *ABS*:000000000000003f __SREG__
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccO2qvuY.s:5      *ABS*:0000000000000000 __tmp_reg__
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccO2qvuY.s:6      *ABS*:0000000000000001 __zero_reg__
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccO2qvuY.s:12     .text:0000000000000000 mcp2515_spi_init
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccO2qvuY.s:15     .text:0000000000000000 .Loc.0
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccO2qvuY.s:16     .text:0000000000000000 L0
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccO2qvuY.s:21     .text:0000000000000000 .Loc.1
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccO2qvuY.s:22     .text:0000000000000000 .Loc.2
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccO2qvuY.s:25     .text:0000000000000004 .Loc.3
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccO2qvuY.s:26     .text:0000000000000004 .Loc.4
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccO2qvuY.s:30     .text:0000000000000008 .Loc.5
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccO2qvuY.s:32     .text:000000000000000a L0
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccO2qvuY.s:37     .text:000000000000000a spi_putc
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccO2qvuY.s:40     .text:000000000000000a .Loc.6
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccO2qvuY.s:41     .text:000000000000000a L0
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccO2qvuY.s:46     .text:000000000000000a .Loc.7
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccO2qvuY.s:47     .text:000000000000000a .Loc.8
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccO2qvuY.s:49     .text:000000000000000c .Loc.9
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccO2qvuY.s:51     .text:000000000000000c .Loc.10
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccO2qvuY.s:52     .text:000000000000000c .Loc.11
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccO2qvuY.s:55     .text:0000000000000010 .Loc.12
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccO2qvuY.s:56     .text:0000000000000010 .Loc.13
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccO2qvuY.s:60     .text:0000000000000012 .Loc.14
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccO2qvuY.s:62     .text:0000000000000014 L0
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccO2qvuY.s:67     .text:0000000000000014 L0
+                     .debug_frame:0000000000000000 L0
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccO2qvuY.s:50     .text:000000000000000c .L3
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccO2qvuY.s:164    .debug_abbrev:0000000000000000 .Ldebug_abbrev0
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccO2qvuY.s:8      .text:0000000000000000 .Ltext0
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccO2qvuY.s:65     .text:0000000000000014 .Letext0
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccO2qvuY.s:327    .debug_line:0000000000000000 .Ldebug_line0
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccO2qvuY.s:39     .text:000000000000000a .LFB20
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccO2qvuY.s:63     .text:0000000000000014 .LFE20
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccO2qvuY.s:302    .debug_loc:0000000000000004 .LLST0
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccO2qvuY.s:297    .debug_loc:0000000000000000 .LVUS0
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccO2qvuY.s:13     .text:0000000000000000 .LFB19
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccO2qvuY.s:33     .text:000000000000000a .LFE19
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccO2qvuY.s:38     .text:000000000000000a .LVL0
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccO2qvuY.s:58     .text:0000000000000012 .LVL1
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccO2qvuY.s:68     .debug_info:0000000000000000 .Ldebug_info0
+
+NO UNDEFINED SYMBOLS

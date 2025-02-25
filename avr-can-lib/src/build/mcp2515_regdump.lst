@@ -1,0 +1,807 @@
+   1               		.file	"mcp2515_regdump.c"
+   2               	__SP_H__ = 0x3e
+   3               	__SP_L__ = 0x3d
+   4               	__SREG__ = 0x3f
+   5               	__tmp_reg__ = 0
+   6               	__zero_reg__ = 1
+   7               		.text
+   8               	.Ltext0:
+   9               		.cfi_sections	.debug_frame
+  10               		.section	.rodata.str1.1,"aMS",@progbits,1
+  11               	.LC0:
+  12 0000 4D43 5032 		.string	"MCP2515 Regdump:\n"
+  12      3531 3520 
+  12      5265 6764 
+  12      756D 703A 
+  12      0A00 
+  13               	.LC1:
+  14 0012 2533 693A 		.string	"%3i: %02x   "
+  14      2025 3032 
+  14      7820 2020 
+  14      00
+  15               	.LC2:
+  16 001f 2533 693A 		.string	"%3i: %02x\n"
+  16      2025 3032 
+  16      780A 00
+  17               		.text
+  18               	.global	mcp2515_regdump
+  20               	mcp2515_regdump:
+  21               	.LFB20:
+  22               		.file 1 "mcp2515_regdump.c"
+   1:mcp2515_regdump.c **** // -----------------------------------------------------------------------------
+   2:mcp2515_regdump.c **** /*
+   3:mcp2515_regdump.c ****  * Copyright (c) 2007 Fabian Greif, Roboterclub Aachen e.V.
+   4:mcp2515_regdump.c ****  *  All rights reserved.
+   5:mcp2515_regdump.c ****  *
+   6:mcp2515_regdump.c ****  * Redistribution and use in source and binary forms, with or without
+   7:mcp2515_regdump.c ****  * modification, are permitted provided that the following conditions
+   8:mcp2515_regdump.c ****  * are met:
+   9:mcp2515_regdump.c ****  * 1. Redistributions of source code must retain the above copyright
+  10:mcp2515_regdump.c ****  *    notice, this list of conditions and the following disclaimer.
+  11:mcp2515_regdump.c ****  * 2. Redistributions in binary form must reproduce the above copyright
+  12:mcp2515_regdump.c ****  *    notice, this list of conditions and the following disclaimer in the
+  13:mcp2515_regdump.c ****  *    documentation and/or other materials provided with the distribution.
+  14:mcp2515_regdump.c ****  *
+  15:mcp2515_regdump.c ****  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+  16:mcp2515_regdump.c ****  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  17:mcp2515_regdump.c ****  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+  18:mcp2515_regdump.c ****  * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+  19:mcp2515_regdump.c ****  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+  20:mcp2515_regdump.c ****  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+  21:mcp2515_regdump.c ****  * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+  22:mcp2515_regdump.c ****  * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+  23:mcp2515_regdump.c ****  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+  24:mcp2515_regdump.c ****  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+  25:mcp2515_regdump.c ****  * SUCH DAMAGE.
+  26:mcp2515_regdump.c ****  *
+  27:mcp2515_regdump.c ****  * $Id: mcp2515_regdump.c 6568 2008-06-16 13:56:26Z fabian $
+  28:mcp2515_regdump.c ****  */
+  29:mcp2515_regdump.c **** // -----------------------------------------------------------------------------
+  30:mcp2515_regdump.c **** 
+  31:mcp2515_regdump.c **** #include "mcp2515_private.h"
+  32:mcp2515_regdump.c **** #ifdef	SUPPORT_FOR_MCP2515__
+  33:mcp2515_regdump.c **** 
+  34:mcp2515_regdump.c **** #include <stdio.h>
+  35:mcp2515_regdump.c **** #include <avr/pgmspace.h>
+  36:mcp2515_regdump.c **** 
+  37:mcp2515_regdump.c **** // -----------------------------------------------------------------------------
+  38:mcp2515_regdump.c **** void mcp2515_regdump(void)
+  39:mcp2515_regdump.c **** {
+  23               		.loc 1 39 1 view -0
+  24               		.cfi_startproc
+  25 0000 CF92      		push r12
+  26               	.LCFI0:
+  27               		.cfi_def_cfa_offset 3
+  28               		.cfi_offset 12, -2
+  29 0002 DF92      		push r13
+  30               	.LCFI1:
+  31               		.cfi_def_cfa_offset 4
+  32               		.cfi_offset 13, -3
+  33 0004 FF92      		push r15
+  34               	.LCFI2:
+  35               		.cfi_def_cfa_offset 5
+  36               		.cfi_offset 15, -4
+  37 0006 0F93      		push r16
+  38               	.LCFI3:
+  39               		.cfi_def_cfa_offset 6
+  40               		.cfi_offset 16, -5
+  41 0008 1F93      		push r17
+  42               	.LCFI4:
+  43               		.cfi_def_cfa_offset 7
+  44               		.cfi_offset 17, -6
+  45 000a CF93      		push r28
+  46               	.LCFI5:
+  47               		.cfi_def_cfa_offset 8
+  48               		.cfi_offset 28, -7
+  49 000c DF93      		push r29
+  50               	.LCFI6:
+  51               		.cfi_def_cfa_offset 9
+  52               		.cfi_offset 29, -8
+  53               	/* prologue: function */
+  54               	/* frame size = 0 */
+  55               	/* stack size = 7 */
+  56               	.L__stack_usage = 7
+  40:mcp2515_regdump.c **** 	uint8_t mode = mcp2515_read_register( CANSTAT );
+  57               		.loc 1 40 2 view .LVU1
+  58               		.loc 1 40 17 is_stmt 0 view .LVU2
+  59 000e 8EE0      		ldi r24,lo8(14)
+  60 0010 0E94 0000 		call mcp2515_read_register
+  61 0014 F82E      		mov r15,r24
+  41:mcp2515_regdump.c **** 	
+  42:mcp2515_regdump.c **** 	// change to configuration mode
+  43:mcp2515_regdump.c **** 	mcp2515_change_operation_mode( (1<<REQOP2) );
+  62               		.loc 1 43 2 is_stmt 1 view .LVU3
+  63               	.LBB6:
+  64               	.LBI6:
+  65               		.file 2 "mcp2515_private.h"
+   1:mcp2515_private.h **** // ----------------------------------------------------------------------------
+   2:mcp2515_private.h **** /*
+   3:mcp2515_private.h ****  * Copyright (c) 2007 Fabian Greif, Roboterclub Aachen e.V.
+   4:mcp2515_private.h ****  *  All rights reserved.
+   5:mcp2515_private.h ****  *
+   6:mcp2515_private.h ****  * Redistribution and use in source and binary forms, with or without
+   7:mcp2515_private.h ****  * modification, are permitted provided that the following conditions
+   8:mcp2515_private.h ****  * are met:
+   9:mcp2515_private.h ****  * 1. Redistributions of source code must retain the above copyright
+  10:mcp2515_private.h ****  *    notice, this list of conditions and the following disclaimer.
+  11:mcp2515_private.h ****  * 2. Redistributions in binary form must reproduce the above copyright
+  12:mcp2515_private.h ****  *    notice, this list of conditions and the following disclaimer in the
+  13:mcp2515_private.h ****  *    documentation and/or other materials provided with the distribution.
+  14:mcp2515_private.h ****  *
+  15:mcp2515_private.h ****  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+  16:mcp2515_private.h ****  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  17:mcp2515_private.h ****  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+  18:mcp2515_private.h ****  * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+  19:mcp2515_private.h ****  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+  20:mcp2515_private.h ****  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+  21:mcp2515_private.h ****  * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+  22:mcp2515_private.h ****  * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+  23:mcp2515_private.h ****  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+  24:mcp2515_private.h ****  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+  25:mcp2515_private.h ****  * SUCH DAMAGE.
+  26:mcp2515_private.h ****  *
+  27:mcp2515_private.h ****  * $Id: mcp2515_private.h 6910 2008-11-30 21:13:14Z fabian $
+  28:mcp2515_private.h ****  */
+  29:mcp2515_private.h **** // ----------------------------------------------------------------------------
+  30:mcp2515_private.h **** 
+  31:mcp2515_private.h **** #ifndef	MCP2515_PRIVATE_H
+  32:mcp2515_private.h **** #define	MCP2515_PRIVATE_H
+  33:mcp2515_private.h **** 
+  34:mcp2515_private.h **** // ----------------------------------------------------------------------------
+  35:mcp2515_private.h **** /**
+  36:mcp2515_private.h ****  * \brief	defines only used inside the library
+  37:mcp2515_private.h ****  *
+  38:mcp2515_private.h ****  * \author	Fabian Greif <fabian.greif@rwth-aachen.de>
+  39:mcp2515_private.h ****  * \version	$Id: mcp2515_private.h 6910 2008-11-30 21:13:14Z fabian $
+  40:mcp2515_private.h ****  *
+  41:mcp2515_private.h ****  * \todo	MCP2515_TXRTSn Pins nutzbar machen.
+  42:mcp2515_private.h ****  */
+  43:mcp2515_private.h **** // ----------------------------------------------------------------------------
+  44:mcp2515_private.h **** 
+  45:mcp2515_private.h **** #include <avr/io.h>
+  46:mcp2515_private.h **** #include <avr/pgmspace.h>
+  47:mcp2515_private.h **** #include <inttypes.h>
+  48:mcp2515_private.h **** #include <stdbool.h>
+  49:mcp2515_private.h **** 
+  50:mcp2515_private.h **** #include "can.h"
+  51:mcp2515_private.h **** #include "utils.h"
+  52:mcp2515_private.h **** 
+  53:mcp2515_private.h **** #include "can_private.h"
+  54:mcp2515_private.h **** #include "spi.h"
+  55:mcp2515_private.h **** 
+  56:mcp2515_private.h **** // ----------------------------------------------------------------------------
+  57:mcp2515_private.h **** 
+  58:mcp2515_private.h **** #if (BUILD_FOR_MCP2515 == 1)
+  59:mcp2515_private.h **** 	#if defined(__AVR_ATmega16__) || defined(__AVR_ATmega32__) || defined(__AVR_ATmega644__)
+  60:mcp2515_private.h **** 		#define	P_MOSI	B,5
+  61:mcp2515_private.h **** 		#define	P_MISO	B,6
+  62:mcp2515_private.h **** 		#define	P_SCK	B,7
+  63:mcp2515_private.h **** 		#define	SUPPORT_FOR_MCP2515__
+  64:mcp2515_private.h **** 	#elif defined(__AVR_AT90USB82__) || defined(__AVR_AT90USB162__)
+  65:mcp2515_private.h **** 		#define P_MOSI  B,2
+  66:mcp2515_private.h **** 		#define P_MISO  B,3
+  67:mcp2515_private.h **** 		#define P_SCK   B,1
+  68:mcp2515_private.h **** 		#define SUPPORT_FOR_MCP2515__
+  69:mcp2515_private.h **** 	#elif defined(__AVR_ATmega8__)  || defined(__AVR_ATmega48__) || \
+  70:mcp2515_private.h **** 		  defined(__AVR_ATmega88__) || defined(__AVR_ATmega168__) || defined(__AVR_ATmega328P__)
+  71:mcp2515_private.h **** 		#define	P_MOSI	B,3
+  72:mcp2515_private.h **** 		#define	P_MISO	B,4
+  73:mcp2515_private.h **** 		#define	P_SCK	B,5
+  74:mcp2515_private.h **** 		#define	SUPPORT_FOR_MCP2515__
+  75:mcp2515_private.h **** 	#elif defined(__AVR_ATmega128__)
+  76:mcp2515_private.h **** 		#define	P_MOSI	B,2
+  77:mcp2515_private.h **** 		#define	P_MISO	B,3
+  78:mcp2515_private.h **** 		#define	P_SCK	B,1
+  79:mcp2515_private.h **** 		#define	SUPPORT_FOR_MCP2515__
+  80:mcp2515_private.h **** 	#elif defined(__AVR_ATtiny45__) || defined(__AVR_ATtiny85__)
+  81:mcp2515_private.h **** 		#define	P_MOSI	B,0
+  82:mcp2515_private.h **** 		#define	P_MISO	B,1
+  83:mcp2515_private.h **** 		#define	P_SCK	B,2
+  84:mcp2515_private.h **** 		
+  85:mcp2515_private.h **** 		#define	USE_SOFTWARE_SPI		1
+  86:mcp2515_private.h **** 		#define	SUPPORT_FOR_MCP2515__
+  87:mcp2515_private.h **** 	#else
+  88:mcp2515_private.h **** 		#error	choosen AVR-type is not supported yet!
+  89:mcp2515_private.h **** 	#endif
+  90:mcp2515_private.h **** #endif
+  91:mcp2515_private.h **** 
+  92:mcp2515_private.h **** 
+  93:mcp2515_private.h **** #ifdef  SUPPORT_FOR_MCP2515__
+  94:mcp2515_private.h **** 
+  95:mcp2515_private.h **** // ----------------------------------------------------------------------------
+  96:mcp2515_private.h **** // load some default values
+  97:mcp2515_private.h **** 
+  98:mcp2515_private.h **** #ifndef	MCP2515_CLKOUT_PRESCALER
+  99:mcp2515_private.h **** 	#define	MCP2515_CLKOUT_PRESCALER	0
+ 100:mcp2515_private.h **** #endif
+ 101:mcp2515_private.h **** #ifndef	MCP2515_INTERRUPTS
+ 102:mcp2515_private.h **** 	#define	MCP2515_INTERRUPTS			(1<<RX1IE)|(1<<RX0IE)
+ 103:mcp2515_private.h **** #endif
+ 104:mcp2515_private.h **** 
+ 105:mcp2515_private.h **** // ----------------------------------------------------------------------------
+ 106:mcp2515_private.h **** // TODO: this file is imcompatible with the at90can
+ 107:mcp2515_private.h **** #include "mcp2515_defs.h"
+ 108:mcp2515_private.h **** 
+ 109:mcp2515_private.h **** #ifndef	MCP2515_CS
+ 110:mcp2515_private.h **** 	#error	MCP2515_CS ist nicht definiert!
+ 111:mcp2515_private.h **** #endif
+ 112:mcp2515_private.h **** 
+ 113:mcp2515_private.h **** #if defined(MCP2515_RX0BF) && !defined(MCP2515_RX1BF)
+ 114:mcp2515_private.h **** 	#warning	only MCP2515_RX0BF but not MCP2515_RX1BF defined!
+ 115:mcp2515_private.h **** #elif !defined(MCP2515_RX0BF) && defined(MCP2515_RX1BF)
+ 116:mcp2515_private.h **** 	#warning	only MCP2515_RX1BF but not MCP2515_RX0BF defined!
+ 117:mcp2515_private.h **** #elif defined(MCP2515_RX0BF) && defined(MCP2515_RX1BF)
+ 118:mcp2515_private.h **** 	#define	RXnBF_FUNKTION
+ 119:mcp2515_private.h **** #endif
+ 120:mcp2515_private.h **** 
+ 121:mcp2515_private.h **** // -------------------------------------------------------------------------
+ 122:mcp2515_private.h **** /**
+ 123:mcp2515_private.h ****  * \brief	Beschreiben von internen Registern
+ 124:mcp2515_private.h ****  */
+ 125:mcp2515_private.h **** extern void mcp2515_write_register( uint8_t adress, uint8_t data );
+ 126:mcp2515_private.h **** 
+ 127:mcp2515_private.h **** // -------------------------------------------------------------------------
+ 128:mcp2515_private.h **** /**
+ 129:mcp2515_private.h ****  * \brief	Lesen der internen Register
+ 130:mcp2515_private.h ****  */
+ 131:mcp2515_private.h **** extern uint8_t mcp2515_read_register(uint8_t adress);
+ 132:mcp2515_private.h **** 
+ 133:mcp2515_private.h **** extern uint8_t mcp2515_read_status(uint8_t type);
+ 134:mcp2515_private.h **** 
+ 135:mcp2515_private.h **** // -------------------------------------------------------------------------
+ 136:mcp2515_private.h **** /**
+ 137:mcp2515_private.h ****  * \brief	Setzten/loeschen einzelner Bits
+ 138:mcp2515_private.h ****  *
+ 139:mcp2515_private.h ****  * Diese Funktionen laesst sich nur auf die Register BFPCTRL, 
+ 140:mcp2515_private.h ****  * TXRTSCTRL, CANCTRL, CNF1, CNF2, CNF3, CANINTE, CANINTF, EFLG,
+ 141:mcp2515_private.h ****  * TXB0CTRL, TXB1CTRL, TXB2CTRL, RXB0CTRL und RXB1CTRL anwenden.
+ 142:mcp2515_private.h ****  *
+ 143:mcp2515_private.h ****  * \see		Datenblatt des MCP2515, Registerbersichtstabelle
+ 144:mcp2515_private.h ****  */
+ 145:mcp2515_private.h **** extern void mcp2515_bit_modify(uint8_t adress, uint8_t mask, uint8_t data);
+ 146:mcp2515_private.h **** 
+ 147:mcp2515_private.h **** // -------------------------------------------------------------------------
+ 148:mcp2515_private.h **** extern __attribute__ ((gnu_inline)) inline void mcp2515_change_operation_mode(uint8_t mode)
+  66               		.loc 2 148 49 view .LVU4
+  67               	.LBB7:
+ 149:mcp2515_private.h **** {
+ 150:mcp2515_private.h **** 	mcp2515_bit_modify(CANCTRL, 0xe0, mode);
+  68               		.loc 2 150 2 view .LVU5
+  69 0016 40E8      		ldi r20,lo8(-128)
+  70 0018 60EE      		ldi r22,lo8(-32)
+  71 001a 8FE0      		ldi r24,lo8(15)
+  72 001c 0E94 0000 		call mcp2515_bit_modify
+ 151:mcp2515_private.h **** 	while ((mcp2515_read_register(CANSTAT) & 0xe0) != (mode & 0xe0))
+  73               		.loc 2 151 2 view .LVU6
+  74               	.L2:
+ 152:mcp2515_private.h **** 		;
+  75               		.loc 2 152 3 view .LVU7
+ 151:mcp2515_private.h **** 	while ((mcp2515_read_register(CANSTAT) & 0xe0) != (mode & 0xe0))
+  76               		.loc 2 151 8 view .LVU8
+ 151:mcp2515_private.h **** 	while ((mcp2515_read_register(CANSTAT) & 0xe0) != (mode & 0xe0))
+  77               		.loc 2 151 10 is_stmt 0 view .LVU9
+  78 0020 8EE0      		ldi r24,lo8(14)
+  79 0022 0E94 0000 		call mcp2515_read_register
+ 151:mcp2515_private.h **** 	while ((mcp2515_read_register(CANSTAT) & 0xe0) != (mode & 0xe0))
+  80               		.loc 2 151 49 view .LVU10
+  81 0026 90E8      		ldi r25,lo8(-128)
+  82 0028 980F      		add r25,r24
+ 151:mcp2515_private.h **** 	while ((mcp2515_read_register(CANSTAT) & 0xe0) != (mode & 0xe0))
+  83               		.loc 2 151 8 view .LVU11
+  84 002a 907E      		andi r25,lo8(-32)
+  85 002c 01F4      		brne .L2
+  86               	.LBE7:
+  87               	.LBE6:
+  44:mcp2515_regdump.c **** 	
+  45:mcp2515_regdump.c **** 	printf_P("MCP2515 Regdump:\n");
+  88               		.loc 1 45 2 is_stmt 1 view .LVU12
+  89 002e 80E0      		ldi r24,lo8(.LC0)
+  90 0030 90E0      		ldi r25,hi8(.LC0)
+  91 0032 9F93      		push r25
+  92               	.LCFI7:
+  93               		.cfi_def_cfa_offset 10
+  94 0034 8F93      		push r24
+  95               	.LCFI8:
+  96               		.cfi_def_cfa_offset 11
+  97 0036 0E94 0000 		call printf_P
+  46:mcp2515_regdump.c **** 	uint8_t i;
+  98               		.loc 1 46 2 view .LVU13
+  47:mcp2515_regdump.c **** 	for (i=0; i < 16; i++) {
+  99               		.loc 1 47 2 view .LVU14
+ 100               		.loc 1 47 12 view .LVU15
+  45:mcp2515_regdump.c **** 	uint8_t i;
+ 101               		.loc 1 45 2 is_stmt 0 view .LVU16
+ 102 003a 0F90      		pop __tmp_reg__
+ 103 003c 0F90      		pop __tmp_reg__
+ 104               	.LCFI9:
+ 105               		.cfi_def_cfa_offset 9
+ 106 003e C0E1      		ldi r28,lo8(16)
+ 107 0040 D0E0      		ldi r29,0
+  48:mcp2515_regdump.c **** 		printf_P("%3i: %02x   ", i, mcp2515_read_register(i));
+ 108               		.loc 1 48 3 view .LVU17
+ 109 0042 00E0      		ldi r16,lo8(.LC1)
+ 110 0044 10E0      		ldi r17,hi8(.LC1)
+  49:mcp2515_regdump.c **** 		printf_P("%3i: %02x   ", i+16*1, mcp2515_read_register(i+16*1));
+  50:mcp2515_regdump.c **** 		printf_P("%3i: %02x   ", i+16*2, mcp2515_read_register(i+16*2));
+  51:mcp2515_regdump.c **** 		printf_P("%3i: %02x   ", i+16*3, mcp2515_read_register(i+16*3));
+  52:mcp2515_regdump.c **** 		printf_P("%3i: %02x   ", i+16*4, mcp2515_read_register(i+16*4));
+  53:mcp2515_regdump.c **** 		printf_P("%3i: %02x   ", i+16*5, mcp2515_read_register(i+16*5));
+  54:mcp2515_regdump.c **** 		printf_P("%3i: %02x   ", i+16*6, mcp2515_read_register(i+16*6));
+  55:mcp2515_regdump.c **** 		printf_P("%3i: %02x\n", i+16*7, mcp2515_read_register(i+16*7));
+ 111               		.loc 1 55 3 view .LVU18
+ 112 0046 80E0      		ldi r24,lo8(.LC2)
+ 113 0048 C82E      		mov r12,r24
+ 114 004a 80E0      		ldi r24,hi8(.LC2)
+ 115 004c D82E      		mov r13,r24
+ 116               	.L3:
+  48:mcp2515_regdump.c **** 		printf_P("%3i: %02x   ", i, mcp2515_read_register(i));
+ 117               		.loc 1 48 3 is_stmt 1 discriminator 3 view .LVU19
+  48:mcp2515_regdump.c **** 		printf_P("%3i: %02x   ", i, mcp2515_read_register(i));
+ 118               		.loc 1 48 31 is_stmt 0 discriminator 3 view .LVU20
+ 119 004e 8C2F      		mov r24,r28
+ 120 0050 8051      		subi r24,lo8(-(-16))
+ 121 0052 0E94 0000 		call mcp2515_read_register
+  48:mcp2515_regdump.c **** 		printf_P("%3i: %02x   ", i, mcp2515_read_register(i));
+ 122               		.loc 1 48 3 discriminator 3 view .LVU21
+ 123 0056 1F92      		push __zero_reg__
+ 124               	.LCFI10:
+ 125               		.cfi_def_cfa_offset 10
+ 126 0058 8F93      		push r24
+ 127               	.LCFI11:
+ 128               		.cfi_def_cfa_offset 11
+ 129 005a CE01      		movw r24,r28
+ 130 005c 4097      		sbiw r24,16
+ 131 005e 9F93      		push r25
+ 132               	.LCFI12:
+ 133               		.cfi_def_cfa_offset 12
+ 134 0060 8F93      		push r24
+ 135               	.LCFI13:
+ 136               		.cfi_def_cfa_offset 13
+ 137 0062 1F93      		push r17
+ 138               	.LCFI14:
+ 139               		.cfi_def_cfa_offset 14
+ 140 0064 0F93      		push r16
+ 141               	.LCFI15:
+ 142               		.cfi_def_cfa_offset 15
+ 143 0066 0E94 0000 		call printf_P
+  49:mcp2515_regdump.c **** 		printf_P("%3i: %02x   ", i+16*1, mcp2515_read_register(i+16*1));
+ 144               		.loc 1 49 3 is_stmt 1 discriminator 3 view .LVU22
+  49:mcp2515_regdump.c **** 		printf_P("%3i: %02x   ", i+16*1, mcp2515_read_register(i+16*1));
+ 145               		.loc 1 49 36 is_stmt 0 discriminator 3 view .LVU23
+ 146 006a 8C2F      		mov r24,r28
+ 147 006c 0E94 0000 		call mcp2515_read_register
+  49:mcp2515_regdump.c **** 		printf_P("%3i: %02x   ", i+16*1, mcp2515_read_register(i+16*1));
+ 148               		.loc 1 49 3 discriminator 3 view .LVU24
+ 149 0070 1F92      		push __zero_reg__
+ 150               	.LCFI16:
+ 151               		.cfi_def_cfa_offset 16
+ 152 0072 8F93      		push r24
+ 153               	.LCFI17:
+ 154               		.cfi_def_cfa_offset 17
+ 155 0074 DF93      		push r29
+ 156               	.LCFI18:
+ 157               		.cfi_def_cfa_offset 18
+ 158 0076 CF93      		push r28
+ 159               	.LCFI19:
+ 160               		.cfi_def_cfa_offset 19
+ 161 0078 1F93      		push r17
+ 162               	.LCFI20:
+ 163               		.cfi_def_cfa_offset 20
+ 164 007a 0F93      		push r16
+ 165               	.LCFI21:
+ 166               		.cfi_def_cfa_offset 21
+ 167 007c 0E94 0000 		call printf_P
+  50:mcp2515_regdump.c **** 		printf_P("%3i: %02x   ", i+16*3, mcp2515_read_register(i+16*3));
+ 168               		.loc 1 50 3 is_stmt 1 discriminator 3 view .LVU25
+  50:mcp2515_regdump.c **** 		printf_P("%3i: %02x   ", i+16*3, mcp2515_read_register(i+16*3));
+ 169               		.loc 1 50 36 is_stmt 0 discriminator 3 view .LVU26
+ 170 0080 8C2F      		mov r24,r28
+ 171 0082 805F      		subi r24,lo8(-(16))
+ 172 0084 0E94 0000 		call mcp2515_read_register
+  50:mcp2515_regdump.c **** 		printf_P("%3i: %02x   ", i+16*3, mcp2515_read_register(i+16*3));
+ 173               		.loc 1 50 3 discriminator 3 view .LVU27
+ 174 0088 1F92      		push __zero_reg__
+ 175               	.LCFI22:
+ 176               		.cfi_def_cfa_offset 22
+ 177 008a 8F93      		push r24
+ 178               	.LCFI23:
+ 179               		.cfi_def_cfa_offset 23
+ 180 008c CE01      		movw r24,r28
+ 181 008e 4096      		adiw r24,16
+ 182 0090 9F93      		push r25
+ 183               	.LCFI24:
+ 184               		.cfi_def_cfa_offset 24
+ 185 0092 8F93      		push r24
+ 186               	.LCFI25:
+ 187               		.cfi_def_cfa_offset 25
+ 188 0094 1F93      		push r17
+ 189               	.LCFI26:
+ 190               		.cfi_def_cfa_offset 26
+ 191 0096 0F93      		push r16
+ 192               	.LCFI27:
+ 193               		.cfi_def_cfa_offset 27
+ 194 0098 0E94 0000 		call printf_P
+  51:mcp2515_regdump.c **** 		printf_P("%3i: %02x   ", i+16*4, mcp2515_read_register(i+16*4));
+ 195               		.loc 1 51 3 is_stmt 1 discriminator 3 view .LVU28
+  51:mcp2515_regdump.c **** 		printf_P("%3i: %02x   ", i+16*4, mcp2515_read_register(i+16*4));
+ 196               		.loc 1 51 36 is_stmt 0 discriminator 3 view .LVU29
+ 197 009c 8C2F      		mov r24,r28
+ 198 009e 805E      		subi r24,lo8(-(32))
+ 199 00a0 0E94 0000 		call mcp2515_read_register
+  51:mcp2515_regdump.c **** 		printf_P("%3i: %02x   ", i+16*4, mcp2515_read_register(i+16*4));
+ 200               		.loc 1 51 3 discriminator 3 view .LVU30
+ 201 00a4 1F92      		push __zero_reg__
+ 202               	.LCFI28:
+ 203               		.cfi_def_cfa_offset 28
+ 204 00a6 8F93      		push r24
+ 205               	.LCFI29:
+ 206               		.cfi_def_cfa_offset 29
+ 207 00a8 CE01      		movw r24,r28
+ 208 00aa 8096      		adiw r24,32
+ 209 00ac 9F93      		push r25
+ 210               	.LCFI30:
+ 211               		.cfi_def_cfa_offset 30
+ 212 00ae 8F93      		push r24
+ 213               	.LCFI31:
+ 214               		.cfi_def_cfa_offset 31
+ 215 00b0 1F93      		push r17
+ 216               	.LCFI32:
+ 217               		.cfi_def_cfa_offset 32
+ 218 00b2 0F93      		push r16
+ 219               	.LCFI33:
+ 220               		.cfi_def_cfa_offset 33
+ 221 00b4 0E94 0000 		call printf_P
+  52:mcp2515_regdump.c **** 		printf_P("%3i: %02x   ", i+16*5, mcp2515_read_register(i+16*5));
+ 222               		.loc 1 52 3 is_stmt 1 discriminator 3 view .LVU31
+  52:mcp2515_regdump.c **** 		printf_P("%3i: %02x   ", i+16*5, mcp2515_read_register(i+16*5));
+ 223               		.loc 1 52 36 is_stmt 0 discriminator 3 view .LVU32
+ 224 00b8 8C2F      		mov r24,r28
+ 225 00ba 805D      		subi r24,lo8(-(48))
+ 226 00bc 0E94 0000 		call mcp2515_read_register
+  52:mcp2515_regdump.c **** 		printf_P("%3i: %02x   ", i+16*5, mcp2515_read_register(i+16*5));
+ 227               		.loc 1 52 3 discriminator 3 view .LVU33
+ 228 00c0 1F92      		push __zero_reg__
+ 229               	.LCFI34:
+ 230               		.cfi_def_cfa_offset 34
+ 231 00c2 8F93      		push r24
+ 232               	.LCFI35:
+ 233               		.cfi_def_cfa_offset 35
+ 234 00c4 CE01      		movw r24,r28
+ 235 00c6 C096      		adiw r24,48
+ 236 00c8 9F93      		push r25
+ 237               	.LCFI36:
+ 238               		.cfi_def_cfa_offset 36
+ 239 00ca 8F93      		push r24
+ 240               	.LCFI37:
+ 241               		.cfi_def_cfa_offset 37
+ 242 00cc 1F93      		push r17
+ 243               	.LCFI38:
+ 244               		.cfi_def_cfa_offset 38
+ 245 00ce 0F93      		push r16
+ 246               	.LCFI39:
+ 247               		.cfi_def_cfa_offset 39
+ 248 00d0 0E94 0000 		call printf_P
+  53:mcp2515_regdump.c **** 		printf_P("%3i: %02x   ", i+16*6, mcp2515_read_register(i+16*6));
+ 249               		.loc 1 53 3 is_stmt 1 discriminator 3 view .LVU34
+  53:mcp2515_regdump.c **** 		printf_P("%3i: %02x   ", i+16*6, mcp2515_read_register(i+16*6));
+ 250               		.loc 1 53 36 is_stmt 0 discriminator 3 view .LVU35
+ 251 00d4 8C2F      		mov r24,r28
+ 252 00d6 805C      		subi r24,lo8(-(64))
+ 253 00d8 0E94 0000 		call mcp2515_read_register
+  53:mcp2515_regdump.c **** 		printf_P("%3i: %02x   ", i+16*6, mcp2515_read_register(i+16*6));
+ 254               		.loc 1 53 3 discriminator 3 view .LVU36
+ 255 00dc 1F92      		push __zero_reg__
+ 256               	.LCFI40:
+ 257               		.cfi_def_cfa_offset 40
+ 258 00de 8F93      		push r24
+ 259               	.LCFI41:
+ 260               		.cfi_def_cfa_offset 41
+ 261 00e0 CE01      		movw r24,r28
+ 262 00e2 805C      		subi r24,-64
+ 263 00e4 9F4F      		sbci r25,-1
+ 264 00e6 9F93      		push r25
+ 265               	.LCFI42:
+ 266               		.cfi_def_cfa_offset 42
+ 267 00e8 8F93      		push r24
+ 268               	.LCFI43:
+ 269               		.cfi_def_cfa_offset 43
+ 270 00ea 1F93      		push r17
+ 271               	.LCFI44:
+ 272               		.cfi_def_cfa_offset 44
+ 273 00ec 0F93      		push r16
+ 274               	.LCFI45:
+ 275               		.cfi_def_cfa_offset 45
+ 276 00ee 0E94 0000 		call printf_P
+  54:mcp2515_regdump.c **** 		printf_P("%3i: %02x\n", i+16*7, mcp2515_read_register(i+16*7));
+ 277               		.loc 1 54 3 is_stmt 1 discriminator 3 view .LVU37
+  54:mcp2515_regdump.c **** 		printf_P("%3i: %02x\n", i+16*7, mcp2515_read_register(i+16*7));
+ 278               		.loc 1 54 36 is_stmt 0 discriminator 3 view .LVU38
+ 279 00f2 8DB7      		in r24,__SP_L__
+ 280 00f4 9EB7      		in r25,__SP_H__
+ 281 00f6 8496      		adiw r24,36
+ 282 00f8 0FB6      		in __tmp_reg__,__SREG__
+ 283 00fa F894      		cli
+ 284 00fc 9EBF      		out __SP_H__,r25
+ 285 00fe 0FBE      		out __SREG__,__tmp_reg__
+ 286 0100 8DBF      		out __SP_L__,r24
+ 287               	.LCFI46:
+ 288               		.cfi_def_cfa_offset 9
+ 289 0102 8C2F      		mov r24,r28
+ 290 0104 805B      		subi r24,lo8(-(80))
+ 291 0106 0E94 0000 		call mcp2515_read_register
+  54:mcp2515_regdump.c **** 		printf_P("%3i: %02x\n", i+16*7, mcp2515_read_register(i+16*7));
+ 292               		.loc 1 54 3 discriminator 3 view .LVU39
+ 293 010a 1F92      		push __zero_reg__
+ 294               	.LCFI47:
+ 295               		.cfi_def_cfa_offset 10
+ 296 010c 8F93      		push r24
+ 297               	.LCFI48:
+ 298               		.cfi_def_cfa_offset 11
+ 299 010e CE01      		movw r24,r28
+ 300 0110 805B      		subi r24,-80
+ 301 0112 9F4F      		sbci r25,-1
+ 302 0114 9F93      		push r25
+ 303               	.LCFI49:
+ 304               		.cfi_def_cfa_offset 12
+ 305 0116 8F93      		push r24
+ 306               	.LCFI50:
+ 307               		.cfi_def_cfa_offset 13
+ 308 0118 1F93      		push r17
+ 309               	.LCFI51:
+ 310               		.cfi_def_cfa_offset 14
+ 311 011a 0F93      		push r16
+ 312               	.LCFI52:
+ 313               		.cfi_def_cfa_offset 15
+ 314 011c 0E94 0000 		call printf_P
+ 315               		.loc 1 55 3 is_stmt 1 discriminator 3 view .LVU40
+ 316               		.loc 1 55 35 is_stmt 0 discriminator 3 view .LVU41
+ 317 0120 8C2F      		mov r24,r28
+ 318 0122 805A      		subi r24,lo8(-(96))
+ 319 0124 0E94 0000 		call mcp2515_read_register
+ 320               		.loc 1 55 3 discriminator 3 view .LVU42
+ 321 0128 1F92      		push __zero_reg__
+ 322               	.LCFI53:
+ 323               		.cfi_def_cfa_offset 16
+ 324 012a 8F93      		push r24
+ 325               	.LCFI54:
+ 326               		.cfi_def_cfa_offset 17
+ 327 012c CE01      		movw r24,r28
+ 328 012e 805A      		subi r24,-96
+ 329 0130 9F4F      		sbci r25,-1
+ 330 0132 9F93      		push r25
+ 331               	.LCFI55:
+ 332               		.cfi_def_cfa_offset 18
+ 333 0134 8F93      		push r24
+ 334               	.LCFI56:
+ 335               		.cfi_def_cfa_offset 19
+ 336 0136 DF92      		push r13
+ 337               	.LCFI57:
+ 338               		.cfi_def_cfa_offset 20
+ 339 0138 CF92      		push r12
+ 340               	.LCFI58:
+ 341               		.cfi_def_cfa_offset 21
+ 342 013a 0E94 0000 		call printf_P
+  47:mcp2515_regdump.c **** 		printf_P("%3i: %02x   ", i, mcp2515_read_register(i));
+ 343               		.loc 1 47 20 is_stmt 1 discriminator 3 view .LVU43
+  47:mcp2515_regdump.c **** 		printf_P("%3i: %02x   ", i, mcp2515_read_register(i));
+ 344               		.loc 1 47 12 discriminator 3 view .LVU44
+ 345 013e 2196      		adiw r28,1
+  47:mcp2515_regdump.c **** 		printf_P("%3i: %02x   ", i, mcp2515_read_register(i));
+ 346               		.loc 1 47 2 is_stmt 0 discriminator 3 view .LVU45
+ 347 0140 8DB7      		in r24,__SP_L__
+ 348 0142 9EB7      		in r25,__SP_H__
+ 349 0144 0C96      		adiw r24,12
+ 350 0146 0FB6      		in __tmp_reg__,__SREG__
+ 351 0148 F894      		cli
+ 352 014a 9EBF      		out __SP_H__,r25
+ 353 014c 0FBE      		out __SREG__,__tmp_reg__
+ 354 014e 8DBF      		out __SP_L__,r24
+ 355               	.LCFI59:
+ 356               		.cfi_def_cfa_offset 9
+ 357 0150 C032      		cpi r28,32
+ 358 0152 D105      		cpc r29,__zero_reg__
+ 359 0154 01F0      		breq .+2
+ 360 0156 00C0      		rjmp .L3
+  56:mcp2515_regdump.c **** 	}
+  57:mcp2515_regdump.c **** 	
+  58:mcp2515_regdump.c **** 	mcp2515_change_operation_mode( mode );
+ 361               		.loc 1 58 2 is_stmt 1 view .LVU46
+ 362               	.LBB8:
+ 363               	.LBI8:
+ 148:mcp2515_private.h **** {
+ 364               		.loc 2 148 49 view .LVU47
+ 365               	.LBB9:
+ 150:mcp2515_private.h **** 	while ((mcp2515_read_register(CANSTAT) & 0xe0) != (mode & 0xe0))
+ 366               		.loc 2 150 2 view .LVU48
+ 367 0158 4F2D      		mov r20,r15
+ 368 015a 60EE      		ldi r22,lo8(-32)
+ 369 015c 8FE0      		ldi r24,lo8(15)
+ 370 015e 0E94 0000 		call mcp2515_bit_modify
+ 151:mcp2515_private.h **** 		;
+ 371               		.loc 2 151 2 view .LVU49
+ 372               	.L4:
+ 373               		.loc 2 152 3 view .LVU50
+ 151:mcp2515_private.h **** 		;
+ 374               		.loc 2 151 8 view .LVU51
+ 151:mcp2515_private.h **** 		;
+ 375               		.loc 2 151 10 is_stmt 0 view .LVU52
+ 376 0162 8EE0      		ldi r24,lo8(14)
+ 377 0164 0E94 0000 		call mcp2515_read_register
+ 151:mcp2515_private.h **** 		;
+ 378               		.loc 2 151 49 view .LVU53
+ 379 0168 9F2D      		mov r25,r15
+ 380 016a 9827      		eor r25,r24
+ 151:mcp2515_private.h **** 		;
+ 381               		.loc 2 151 8 view .LVU54
+ 382 016c 907E      		andi r25,lo8(-32)
+ 383 016e 01F4      		brne .L4
+ 384               	/* epilogue start */
+ 385               	.LBE9:
+ 386               	.LBE8:
+  59:mcp2515_regdump.c **** }
+ 387               		.loc 1 59 1 view .LVU55
+ 388 0170 DF91      		pop r29
+ 389 0172 CF91      		pop r28
+ 390 0174 1F91      		pop r17
+ 391 0176 0F91      		pop r16
+ 392 0178 FF90      		pop r15
+ 393 017a DF90      		pop r13
+ 394 017c CF90      		pop r12
+ 395 017e 0895      		ret
+ 396               		.cfi_endproc
+ 397               	.LFE20:
+ 399               	.Letext0:
+ 400               		.file 3 "/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/stdio.h"
+ 401               		.file 4 "/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/stdint.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 mcp2515_regdump.c
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:2      *ABS*:000000000000003e __SP_H__
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:3      *ABS*:000000000000003d __SP_L__
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:4      *ABS*:000000000000003f __SREG__
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:5      *ABS*:0000000000000000 __tmp_reg__
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:6      *ABS*:0000000000000001 __zero_reg__
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:20     .text:0000000000000000 mcp2515_regdump
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:23     .text:0000000000000000 .Loc.0
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:24     .text:0000000000000000 L0
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:57     .text:000000000000000e .Loc.1
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:58     .text:000000000000000e .Loc.2
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:62     .text:0000000000000016 .Loc.3
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:66     .text:0000000000000016 .Loc.4
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:68     .text:0000000000000016 .Loc.5
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:73     .text:0000000000000020 .Loc.6
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:75     .text:0000000000000020 .Loc.7
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:76     .text:0000000000000020 .Loc.8
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:77     .text:0000000000000020 .Loc.9
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:80     .text:0000000000000026 .Loc.10
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:83     .text:000000000000002a .Loc.11
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:88     .text:000000000000002e .Loc.12
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:98     .text:000000000000003a .Loc.13
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:99     .text:000000000000003a .Loc.14
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:100    .text:000000000000003a .Loc.15
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:101    .text:000000000000003a .Loc.16
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:108    .text:0000000000000042 .Loc.17
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:111    .text:0000000000000046 .Loc.18
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:117    .text:000000000000004e .Loc.19
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:118    .text:000000000000004e .Loc.20
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:122    .text:0000000000000056 .Loc.21
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:144    .text:000000000000006a .Loc.22
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:145    .text:000000000000006a .Loc.23
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:148    .text:0000000000000070 .Loc.24
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:168    .text:0000000000000080 .Loc.25
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:169    .text:0000000000000080 .Loc.26
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:173    .text:0000000000000088 .Loc.27
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:195    .text:000000000000009c .Loc.28
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:196    .text:000000000000009c .Loc.29
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:200    .text:00000000000000a4 .Loc.30
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:222    .text:00000000000000b8 .Loc.31
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:223    .text:00000000000000b8 .Loc.32
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:227    .text:00000000000000c0 .Loc.33
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:249    .text:00000000000000d4 .Loc.34
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:250    .text:00000000000000d4 .Loc.35
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:254    .text:00000000000000dc .Loc.36
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:277    .text:00000000000000f2 .Loc.37
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:278    .text:00000000000000f2 .Loc.38
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:292    .text:000000000000010a .Loc.39
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:315    .text:0000000000000120 .Loc.40
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:316    .text:0000000000000120 .Loc.41
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:320    .text:0000000000000128 .Loc.42
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:343    .text:000000000000013e .Loc.43
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:344    .text:000000000000013e .Loc.44
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:346    .text:0000000000000140 .Loc.45
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:359    .text:0000000000000156 L0
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:361    .text:0000000000000158 .Loc.46
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:364    .text:0000000000000158 .Loc.47
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:366    .text:0000000000000158 .Loc.48
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:371    .text:0000000000000162 .Loc.49
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:373    .text:0000000000000162 .Loc.50
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:374    .text:0000000000000162 .Loc.51
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:375    .text:0000000000000162 .Loc.52
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:378    .text:0000000000000168 .Loc.53
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:381    .text:000000000000016c .Loc.54
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:387    .text:0000000000000170 .Loc.55
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:396    .text:0000000000000180 L0
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:402    .text:0000000000000180 L0
+                     .debug_frame:0000000000000000 L0
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:74     .text:0000000000000020 .L2
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:116    .text:000000000000004e .L3
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:372    .text:0000000000000162 .L4
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:654    .debug_abbrev:0000000000000000 .Ldebug_abbrev0
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:8      .text:0000000000000000 .Ltext0
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:399    .text:0000000000000180 .Letext0
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:1392   .debug_line:0000000000000000 .Ldebug_line0
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:21     .text:0000000000000000 .LFB20
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:397    .text:0000000000000180 .LFE20
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:1010   .debug_loc:0000000000000000 .LLST0
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:64     .text:0000000000000016 .LBI6
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:63     .text:0000000000000016 .LBB6
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:87     .text:000000000000002e .LBE6
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:363    .text:0000000000000158 .LBI8
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:362    .text:0000000000000158 .LBB8
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:386    .text:0000000000000170 .LBE8
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:26     .text:0000000000000002 .LCFI0
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:30     .text:0000000000000004 .LCFI1
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:34     .text:0000000000000006 .LCFI2
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:38     .text:0000000000000008 .LCFI3
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:42     .text:000000000000000a .LCFI4
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:46     .text:000000000000000c .LCFI5
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:50     .text:000000000000000e .LCFI6
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:92     .text:0000000000000034 .LCFI7
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:95     .text:0000000000000036 .LCFI8
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:104    .text:000000000000003e .LCFI9
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:124    .text:0000000000000058 .LCFI10
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:127    .text:000000000000005a .LCFI11
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:132    .text:0000000000000060 .LCFI12
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:135    .text:0000000000000062 .LCFI13
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:138    .text:0000000000000064 .LCFI14
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:141    .text:0000000000000066 .LCFI15
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:150    .text:0000000000000072 .LCFI16
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:153    .text:0000000000000074 .LCFI17
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:156    .text:0000000000000076 .LCFI18
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:159    .text:0000000000000078 .LCFI19
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:162    .text:000000000000007a .LCFI20
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:165    .text:000000000000007c .LCFI21
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:175    .text:000000000000008a .LCFI22
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:178    .text:000000000000008c .LCFI23
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:183    .text:0000000000000092 .LCFI24
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:186    .text:0000000000000094 .LCFI25
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:189    .text:0000000000000096 .LCFI26
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:192    .text:0000000000000098 .LCFI27
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:202    .text:00000000000000a6 .LCFI28
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:205    .text:00000000000000a8 .LCFI29
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:210    .text:00000000000000ae .LCFI30
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:213    .text:00000000000000b0 .LCFI31
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:216    .text:00000000000000b2 .LCFI32
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:219    .text:00000000000000b4 .LCFI33
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:229    .text:00000000000000c2 .LCFI34
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:232    .text:00000000000000c4 .LCFI35
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:237    .text:00000000000000ca .LCFI36
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:240    .text:00000000000000cc .LCFI37
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:243    .text:00000000000000ce .LCFI38
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:246    .text:00000000000000d0 .LCFI39
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:256    .text:00000000000000de .LCFI40
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:259    .text:00000000000000e0 .LCFI41
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:265    .text:00000000000000e8 .LCFI42
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:268    .text:00000000000000ea .LCFI43
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:271    .text:00000000000000ec .LCFI44
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:274    .text:00000000000000ee .LCFI45
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:287    .text:0000000000000102 .LCFI46
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:294    .text:000000000000010c .LCFI47
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:297    .text:000000000000010e .LCFI48
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:303    .text:0000000000000116 .LCFI49
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:306    .text:0000000000000118 .LCFI50
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:309    .text:000000000000011a .LCFI51
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:312    .text:000000000000011c .LCFI52
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:322    .text:000000000000012a .LCFI53
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:325    .text:000000000000012c .LCFI54
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:331    .text:0000000000000134 .LCFI55
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:334    .text:0000000000000136 .LCFI56
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:337    .text:0000000000000138 .LCFI57
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:340    .text:000000000000013a .LCFI58
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:355    .text:0000000000000150 .LCFI59
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccNzp0sC.s:403    .debug_info:0000000000000000 .Ldebug_info0
+
+UNDEFINED SYMBOLS
+mcp2515_read_register
+mcp2515_bit_modify
+printf_P
+__do_copy_data

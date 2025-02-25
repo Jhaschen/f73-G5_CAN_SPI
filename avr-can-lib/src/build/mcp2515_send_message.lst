@@ -1,0 +1,721 @@
+   1               		.file	"mcp2515_send_message.c"
+   2               	__SP_H__ = 0x3e
+   3               	__SP_L__ = 0x3d
+   4               	__SREG__ = 0x3f
+   5               	__tmp_reg__ = 0
+   6               	__zero_reg__ = 1
+   7               		.text
+   8               	.Ltext0:
+   9               		.cfi_sections	.debug_frame
+  10               	.global	can_send_message
+  12               	can_send_message:
+  13               	.LVL0:
+  14               	.LFB19:
+  15               		.file 1 "mcp2515_send_message.c"
+   1:mcp2515_send_message.c **** // ----------------------------------------------------------------------------
+   2:mcp2515_send_message.c **** /*
+   3:mcp2515_send_message.c ****  * Copyright (c) 2007 Fabian Greif, Roboterclub Aachen e.V.
+   4:mcp2515_send_message.c ****  *  All rights reserved.
+   5:mcp2515_send_message.c ****  *
+   6:mcp2515_send_message.c ****  * Redistribution and use in source and binary forms, with or without
+   7:mcp2515_send_message.c ****  * modification, are permitted provided that the following conditions
+   8:mcp2515_send_message.c ****  * are met:
+   9:mcp2515_send_message.c ****  * 1. Redistributions of source code must retain the above copyright
+  10:mcp2515_send_message.c ****  *    notice, this list of conditions and the following disclaimer.
+  11:mcp2515_send_message.c ****  * 2. Redistributions in binary form must reproduce the above copyright
+  12:mcp2515_send_message.c ****  *    notice, this list of conditions and the following disclaimer in the
+  13:mcp2515_send_message.c ****  *    documentation and/or other materials provided with the distribution.
+  14:mcp2515_send_message.c ****  *
+  15:mcp2515_send_message.c ****  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+  16:mcp2515_send_message.c ****  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  17:mcp2515_send_message.c ****  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+  18:mcp2515_send_message.c ****  * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+  19:mcp2515_send_message.c ****  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+  20:mcp2515_send_message.c ****  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+  21:mcp2515_send_message.c ****  * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+  22:mcp2515_send_message.c ****  * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+  23:mcp2515_send_message.c ****  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+  24:mcp2515_send_message.c ****  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+  25:mcp2515_send_message.c ****  * SUCH DAMAGE.
+  26:mcp2515_send_message.c ****  *
+  27:mcp2515_send_message.c ****  * $Id: mcp2515_send_message.c 7224 2009-01-25 20:19:32Z fabian $
+  28:mcp2515_send_message.c ****  */
+  29:mcp2515_send_message.c **** // ----------------------------------------------------------------------------
+  30:mcp2515_send_message.c **** 
+  31:mcp2515_send_message.c **** #include "mcp2515_private.h"
+  32:mcp2515_send_message.c **** #ifdef	SUPPORT_FOR_MCP2515__
+  33:mcp2515_send_message.c **** 
+  34:mcp2515_send_message.c **** #include <util/delay.h>
+  35:mcp2515_send_message.c **** 
+  36:mcp2515_send_message.c **** // ----------------------------------------------------------------------------
+  37:mcp2515_send_message.c **** uint8_t mcp2515_send_message(const can_t *msg)
+  38:mcp2515_send_message.c **** {
+  16               		.loc 1 38 1 view -0
+  17               		.cfi_startproc
+  18               		.loc 1 38 1 is_stmt 0 view .LVU1
+  19 0000 FF92      		push r15
+  20               	.LCFI0:
+  21               		.cfi_def_cfa_offset 3
+  22               		.cfi_offset 15, -2
+  23 0002 0F93      		push r16
+  24               	.LCFI1:
+  25               		.cfi_def_cfa_offset 4
+  26               		.cfi_offset 16, -3
+  27 0004 1F93      		push r17
+  28               	.LCFI2:
+  29               		.cfi_def_cfa_offset 5
+  30               		.cfi_offset 17, -4
+  31 0006 CF93      		push r28
+  32               	.LCFI3:
+  33               		.cfi_def_cfa_offset 6
+  34               		.cfi_offset 28, -5
+  35 0008 DF93      		push r29
+  36               	.LCFI4:
+  37               		.cfi_def_cfa_offset 7
+  38               		.cfi_offset 29, -6
+  39               	/* prologue: function */
+  40               	/* frame size = 0 */
+  41               	/* stack size = 5 */
+  42               	.L__stack_usage = 5
+  43 000a 8C01      		movw r16,r24
+  39:mcp2515_send_message.c **** 	// Status des MCP2515 auslesen
+  40:mcp2515_send_message.c **** 	uint8_t status = mcp2515_read_status(SPI_READ_STATUS);
+  44               		.loc 1 40 2 is_stmt 1 view .LVU2
+  45               		.loc 1 40 19 is_stmt 0 view .LVU3
+  46 000c 80EA      		ldi r24,lo8(-96)
+  47               	.LVL1:
+  48               		.loc 1 40 19 view .LVU4
+  49 000e 0E94 0000 		call mcp2515_read_status
+  50               	.LVL2:
+  41:mcp2515_send_message.c **** 	
+  42:mcp2515_send_message.c **** 	/* Statusbyte:
+  43:mcp2515_send_message.c **** 	 *
+  44:mcp2515_send_message.c **** 	 * Bit	Funktion
+  45:mcp2515_send_message.c **** 	 *  2	TXB0CNTRL.TXREQ
+  46:mcp2515_send_message.c **** 	 *  4	TXB1CNTRL.TXREQ
+  47:mcp2515_send_message.c **** 	 *  6	TXB2CNTRL.TXREQ
+  48:mcp2515_send_message.c **** 	 */
+  49:mcp2515_send_message.c **** 	uint8_t address;
+  51               		.loc 1 49 2 is_stmt 1 view .LVU5
+  50:mcp2515_send_message.c **** 	if (_bit_is_clear(status, 2)) {
+  52               		.loc 1 50 2 view .LVU6
+  53               		.loc 1 50 5 is_stmt 0 view .LVU7
+  54 0012 C82F      		mov r28,r24
+  55 0014 C470      		andi r28,lo8(4)
+  56 0016 82FF      		sbrs r24,2
+  57 0018 00C0      		rjmp .L2
+  51:mcp2515_send_message.c **** 		address = 0x00;
+  52:mcp2515_send_message.c **** 	}
+  53:mcp2515_send_message.c **** 	else if (_bit_is_clear(status, 4)) {
+  58               		.loc 1 53 7 is_stmt 1 view .LVU8
+  59               		.loc 1 53 10 is_stmt 0 view .LVU9
+  60 001a 84FF      		sbrs r24,4
+  61 001c 00C0      		rjmp .L9
+  54:mcp2515_send_message.c **** 		address = 0x02;
+  55:mcp2515_send_message.c **** 	} 
+  56:mcp2515_send_message.c **** 	else if (_bit_is_clear(status, 6)) {
+  62               		.loc 1 56 7 is_stmt 1 view .LVU10
+  57:mcp2515_send_message.c **** 		address = 0x04;
+  63               		.loc 1 57 11 is_stmt 0 view .LVU11
+  64 001e C4E0      		ldi r28,lo8(4)
+  56:mcp2515_send_message.c **** 		address = 0x04;
+  65               		.loc 1 56 10 view .LVU12
+  66 0020 86FF      		sbrs r24,6
+  67 0022 00C0      		rjmp .L2
+  58:mcp2515_send_message.c **** 	}
+  59:mcp2515_send_message.c **** 	else {
+  60:mcp2515_send_message.c **** 		// Alle Puffer sind belegt,
+  61:mcp2515_send_message.c **** 		// Nachricht kann nicht verschickt werden
+  62:mcp2515_send_message.c **** 		return 0;
+  68               		.loc 1 62 10 view .LVU13
+  69 0024 C0E0      		ldi r28,0
+  70 0026 00C0      		rjmp .L1
+  71               	.L9:
+  54:mcp2515_send_message.c **** 	} 
+  72               		.loc 1 54 11 view .LVU14
+  73 0028 C2E0      		ldi r28,lo8(2)
+  74               	.L2:
+  75               	.LVL3:
+  63:mcp2515_send_message.c **** 	}
+  64:mcp2515_send_message.c **** 	
+  65:mcp2515_send_message.c **** 	RESET(MCP2515_CS);
+  76               		.loc 1 65 2 is_stmt 1 view .LVU15
+  77 002a C098      		cbi 0x18,0
+  66:mcp2515_send_message.c **** 	spi_putc(SPI_WRITE_TX | address);
+  78               		.loc 1 66 2 view .LVU16
+  79 002c 8C2F      		mov r24,r28
+  80               	.LVL4:
+  81               		.loc 1 66 2 is_stmt 0 view .LVU17
+  82 002e 8064      		ori r24,lo8(64)
+  83 0030 0E94 0000 		call spi_putc
+  84               	.LVL5:
+  67:mcp2515_send_message.c **** 	#if SUPPORT_EXTENDED_CANID
+  68:mcp2515_send_message.c **** 		mcp2515_write_id(&msg->id, msg->flags.extended);
+  69:mcp2515_send_message.c **** 	#else
+  70:mcp2515_send_message.c **** 		mcp2515_write_id(&msg->id);
+  85               		.loc 1 70 3 is_stmt 1 view .LVU18
+  86 0034 C801      		movw r24,r16
+  87 0036 0E94 0000 		call mcp2515_write_id
+  88               	.LVL6:
+  71:mcp2515_send_message.c **** 	#endif
+  72:mcp2515_send_message.c **** 	uint8_t length = msg->length & 0x0f;
+  89               		.loc 1 72 2 view .LVU19
+  90               		.loc 1 72 10 is_stmt 0 view .LVU20
+  91 003a F801      		movw r30,r16
+  92 003c D381      		ldd r29,Z+3
+  93 003e DF70      		andi r29,lo8(15)
+  94               	.LVL7:
+  73:mcp2515_send_message.c **** 	
+  74:mcp2515_send_message.c **** 	// Ist die Nachricht ein "Remote Transmit Request" ?
+  75:mcp2515_send_message.c **** 	if (msg->flags.rtr)
+  95               		.loc 1 75 2 is_stmt 1 view .LVU21
+  96               		.loc 1 75 6 is_stmt 0 view .LVU22
+  97 0040 8281      		ldd r24,Z+2
+  98               		.loc 1 75 5 view .LVU23
+  99 0042 F82F      		mov r31,r24
+ 100 0044 F170      		andi r31,lo8(1)
+ 101 0046 FF2E      		mov r15,r31
+ 102 0048 80FF      		sbrs r24,0
+ 103 004a 00C0      		rjmp .L4
+  76:mcp2515_send_message.c **** 	{
+  77:mcp2515_send_message.c **** 		// Ein RTR hat zwar eine Laenge,
+  78:mcp2515_send_message.c **** 		// enthaelt aber keine Daten
+  79:mcp2515_send_message.c **** 		
+  80:mcp2515_send_message.c **** 		// Nachrichten Laenge + RTR einstellen
+  81:mcp2515_send_message.c **** 		spi_putc((1<<RTR) | length);
+ 104               		.loc 1 81 3 is_stmt 1 view .LVU24
+ 105 004c 8D2F      		mov r24,r29
+ 106 004e 8064      		ori r24,lo8(64)
+ 107 0050 0E94 0000 		call spi_putc
+ 108               	.LVL8:
+ 109               	.L5:
+  82:mcp2515_send_message.c **** 	}
+  83:mcp2515_send_message.c **** 	else
+  84:mcp2515_send_message.c **** 	{
+  85:mcp2515_send_message.c **** 		// Nachrichten Laenge einstellen
+  86:mcp2515_send_message.c **** 		spi_putc(length);
+  87:mcp2515_send_message.c **** 		
+  88:mcp2515_send_message.c **** 		// Daten
+  89:mcp2515_send_message.c **** 		for (uint8_t i=0;i<length;i++) {
+  90:mcp2515_send_message.c **** 			spi_putc(msg->data[i]);
+  91:mcp2515_send_message.c **** 		}
+  92:mcp2515_send_message.c **** 	}
+  93:mcp2515_send_message.c **** 	SET(MCP2515_CS);
+ 110               		.loc 1 93 2 view .LVU25
+ 111 0054 C09A      		sbi 0x18,0
+  94:mcp2515_send_message.c **** 	
+  95:mcp2515_send_message.c **** 	_delay_us(1);
+ 112               		.loc 1 95 2 view .LVU26
+ 113               	.LVL9:
+ 114               	.LBB5:
+ 115               	.LBI5:
+ 116               		.file 2 "/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h"
+   1:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** /* Copyright (c) 2002, Marek Michalkiewicz
+   2:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    Copyright (c) 2004,2005,2007 Joerg Wunsch
+   3:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    Copyright (c) 2007  Florin-Viorel Petrov
+   4:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    All rights reserved.
+   5:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 
+   6:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    Redistribution and use in source and binary forms, with or without
+   7:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    modification, are permitted provided that the following conditions are met:
+   8:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 
+   9:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    * Redistributions of source code must retain the above copyright
+  10:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****      notice, this list of conditions and the following disclaimer.
+  11:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 
+  12:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    * Redistributions in binary form must reproduce the above copyright
+  13:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****      notice, this list of conditions and the following disclaimer in
+  14:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****      the documentation and/or other materials provided with the
+  15:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****      distribution.
+  16:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 
+  17:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    * Neither the name of the copyright holders nor the names of
+  18:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****      contributors may be used to endorse or promote products derived
+  19:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****      from this software without specific prior written permission.
+  20:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 
+  21:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+  22:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****   AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  23:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****   IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+  24:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****   ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+  25:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****   LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+  26:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****   CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+  27:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****   SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+  28:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****   INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+  29:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****   CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+  30:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+  31:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****   POSSIBILITY OF SUCH DAMAGE. */
+  32:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 
+  33:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** /* $Id: delay.h.in 2506 2016-02-08 10:05:45Z joerg_wunsch $ */
+  34:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 
+  35:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** #ifndef _UTIL_DELAY_H_
+  36:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** #define _UTIL_DELAY_H_ 1
+  37:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 
+  38:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** #ifndef __DOXYGEN__
+  39:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** #  ifndef __HAS_DELAY_CYCLES
+  40:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** #    define __HAS_DELAY_CYCLES 1
+  41:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** #  endif
+  42:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** #endif  /* __DOXYGEN__ */
+  43:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 
+  44:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** #include <inttypes.h>
+  45:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** #include <util/delay_basic.h>
+  46:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** #include <math.h>
+  47:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 
+  48:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** /** \file */
+  49:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** /** \defgroup util_delay <util/delay.h>: Convenience functions for busy-wait delay loops
+  50:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****     \code
+  51:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****     #define F_CPU 1000000UL  // 1 MHz
+  52:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****     //#define F_CPU 14.7456E6
+  53:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****     #include <util/delay.h>
+  54:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****     \endcode
+  55:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 
+  56:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****     \note As an alternative method, it is possible to pass the
+  57:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****     F_CPU macro down to the compiler from the Makefile.
+  58:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****     Obviously, in that case, no \c \#define statement should be
+  59:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****     used.
+  60:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 
+  61:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****     The functions in this header file are wrappers around the basic
+  62:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****     busy-wait functions from <util/delay_basic.h>.  They are meant as
+  63:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****     convenience functions where actual time values can be specified
+  64:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****     rather than a number of cycles to wait for.  The idea behind is
+  65:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****     that compile-time constant expressions will be eliminated by
+  66:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****     compiler optimization so floating-point expressions can be used
+  67:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****     to calculate the number of delay cycles needed based on the CPU
+  68:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****     frequency passed by the macro F_CPU.
+  69:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 
+  70:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****     \note In order for these functions to work as intended, compiler
+  71:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****     optimizations <em>must</em> be enabled, and the delay time
+  72:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****     <em>must</em> be an expression that is a known constant at
+  73:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****     compile-time.  If these requirements are not met, the resulting
+  74:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****     delay will be much longer (and basically unpredictable), and
+  75:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****     applications that otherwise do not use floating-point calculations
+  76:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****     will experience severe code bloat by the floating-point library
+  77:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****     routines linked into the application.
+  78:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 
+  79:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****     The functions available allow the specification of microsecond, and
+  80:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****     millisecond delays directly, using the application-supplied macro
+  81:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****     F_CPU as the CPU clock frequency (in Hertz).
+  82:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 
+  83:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** */
+  84:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 
+  85:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** #if !defined(__DOXYGEN__)
+  86:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** static __inline__ void _delay_us(double __us) __attribute__((__always_inline__));
+  87:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** static __inline__ void _delay_ms(double __ms) __attribute__((__always_inline__));
+  88:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** #endif
+  89:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 
+  90:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** #ifndef F_CPU
+  91:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** /* prevent compiler error by supplying a default */
+  92:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** # warning "F_CPU not defined for <util/delay.h>"
+  93:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** /** \ingroup util_delay
+  94:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****     \def F_CPU
+  95:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****     \brief CPU frequency in Hz
+  96:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 
+  97:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****     The macro F_CPU specifies the CPU frequency to be considered by
+  98:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****     the delay macros.  This macro is normally supplied by the
+  99:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****     environment (e.g. from within a project header, or the project's
+ 100:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****     Makefile).  The value 1 MHz here is only provided as a "vanilla"
+ 101:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****     fallback if no such user-provided definition could be found.
+ 102:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 
+ 103:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****     In terms of the delay functions, the CPU frequency can be given as
+ 104:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****     a floating-point constant (e.g. 3.6864E6 for 3.6864 MHz).
+ 105:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****     However, the macros in <util/setbaud.h> require it to be an
+ 106:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****     integer value.
+ 107:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****  */
+ 108:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** # define F_CPU 1000000UL
+ 109:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** #endif
+ 110:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 
+ 111:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** #ifndef __OPTIMIZE__
+ 112:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** # warning "Compiler optimizations disabled; functions from <util/delay.h> won't work as designed"
+ 113:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** #endif
+ 114:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 
+ 115:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** #if __HAS_DELAY_CYCLES && defined(__OPTIMIZE__) && \
+ 116:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****   !defined(__DELAY_BACKWARD_COMPATIBLE__) &&	   \
+ 117:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****   __STDC_HOSTED__
+ 118:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** #  include <math.h>
+ 119:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** #endif
+ 120:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 
+ 121:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** /**
+ 122:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    \ingroup util_delay
+ 123:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 
+ 124:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    Perform a delay of \c __ms milliseconds, using _delay_loop_2().
+ 125:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 
+ 126:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    The macro F_CPU is supposed to be defined to a
+ 127:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    constant defining the CPU clock frequency (in Hertz).
+ 128:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 
+ 129:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    The maximal possible delay is 262.14 ms / F_CPU in MHz.
+ 130:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 
+ 131:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    When the user request delay which exceed the maximum possible one,
+ 132:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    _delay_ms() provides a decreased resolution functionality. In this
+ 133:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    mode _delay_ms() will work with a resolution of 1/10 ms, providing
+ 134:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    delays up to 6.5535 seconds (independent from CPU frequency).  The
+ 135:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    user will not be informed about decreased resolution.
+ 136:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 
+ 137:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    If the avr-gcc toolchain has __builtin_avr_delay_cycles()
+ 138:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    support, maximal possible delay is 4294967.295 ms/ F_CPU in MHz. For
+ 139:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    values greater than the maximal possible delay, overflows results in
+ 140:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    no delay i.e., 0ms.
+ 141:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 
+ 142:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    Conversion of \c __ms into clock cycles may not always result in
+ 143:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    integer.  By default, the clock cycles rounded up to next
+ 144:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    integer. This ensures that the user gets at least \c __ms
+ 145:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    microseconds of delay.
+ 146:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 
+ 147:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    Alternatively, by defining the macro \c __DELAY_ROUND_DOWN__, or
+ 148:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    \c __DELAY_ROUND_CLOSEST__, before including this header file, the
+ 149:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    algorithm can be made to round down, or round to closest integer,
+ 150:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    respectively.
+ 151:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 
+ 152:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    \note
+ 153:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 
+ 154:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    The implementation of _delay_ms() based on
+ 155:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    __builtin_avr_delay_cycles() is not backward compatible with older
+ 156:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    implementations.  In order to get functionality backward compatible
+ 157:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    with previous versions, the macro \c "__DELAY_BACKWARD_COMPATIBLE__"
+ 158:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    must be defined before including this header file. Also, the
+ 159:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    backward compatible algorithm will be chosen if the code is
+ 160:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    compiled in a <em>freestanding environment</em> (GCC option
+ 161:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    \c -ffreestanding), as the math functions required for rounding are
+ 162:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    not available to the compiler then.
+ 163:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 
+ 164:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****  */
+ 165:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** void
+ 166:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** _delay_ms(double __ms)
+ 167:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** {
+ 168:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 	double __tmp ;
+ 169:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** #if __HAS_DELAY_CYCLES && defined(__OPTIMIZE__) && \
+ 170:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****   !defined(__DELAY_BACKWARD_COMPATIBLE__) &&	   \
+ 171:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****   __STDC_HOSTED__
+ 172:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 	uint32_t __ticks_dc;
+ 173:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 	extern void __builtin_avr_delay_cycles(unsigned long);
+ 174:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 	__tmp = ((F_CPU) / 1e3) * __ms;
+ 175:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 
+ 176:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 	#if defined(__DELAY_ROUND_DOWN__)
+ 177:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 		__ticks_dc = (uint32_t)fabs(__tmp);
+ 178:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 
+ 179:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 	#elif defined(__DELAY_ROUND_CLOSEST__)
+ 180:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 		__ticks_dc = (uint32_t)(fabs(__tmp)+0.5);
+ 181:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 
+ 182:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 	#else
+ 183:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 		//round up by default
+ 184:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 		__ticks_dc = (uint32_t)(ceil(fabs(__tmp)));
+ 185:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 	#endif
+ 186:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 
+ 187:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 	__builtin_avr_delay_cycles(__ticks_dc);
+ 188:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 
+ 189:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** #else
+ 190:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 	uint16_t __ticks;
+ 191:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 	__tmp = ((F_CPU) / 4e3) * __ms;
+ 192:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 	if (__tmp < 1.0)
+ 193:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 		__ticks = 1;
+ 194:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 	else if (__tmp > 65535)
+ 195:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 	{
+ 196:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 		//	__ticks = requested delay in 1/10 ms
+ 197:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 		__ticks = (uint16_t) (__ms * 10.0);
+ 198:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 		while(__ticks)
+ 199:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 		{
+ 200:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 			// wait 1/10 ms
+ 201:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 			_delay_loop_2(((F_CPU) / 4e3) / 10);
+ 202:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 			__ticks --;
+ 203:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 		}
+ 204:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 		return;
+ 205:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 	}
+ 206:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 	else
+ 207:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 		__ticks = (uint16_t)__tmp;
+ 208:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 	_delay_loop_2(__ticks);
+ 209:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** #endif
+ 210:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** }
+ 211:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 
+ 212:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** /**
+ 213:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    \ingroup util_delay
+ 214:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 
+ 215:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    Perform a delay of \c __us microseconds, using _delay_loop_1().
+ 216:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 
+ 217:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    The macro F_CPU is supposed to be defined to a
+ 218:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    constant defining the CPU clock frequency (in Hertz).
+ 219:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 
+ 220:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    The maximal possible delay is 768 us / F_CPU in MHz.
+ 221:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 
+ 222:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    If the user requests a delay greater than the maximal possible one,
+ 223:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    _delay_us() will automatically call _delay_ms() instead.  The user
+ 224:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    will not be informed about this case.
+ 225:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 
+ 226:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    If the avr-gcc toolchain has __builtin_avr_delay_cycles()
+ 227:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    support, maximal possible delay is 4294967.295 us/ F_CPU in MHz. For
+ 228:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    values greater than the maximal possible delay, overflow results in
+ 229:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    no delay i.e., 0us.
+ 230:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 
+ 231:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    Conversion of \c __us into clock cycles may not always result in
+ 232:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    integer.  By default, the clock cycles rounded up to next
+ 233:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    integer. This ensures that the user gets at least \c __us
+ 234:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    microseconds of delay.
+ 235:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 
+ 236:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    Alternatively, by defining the macro \c __DELAY_ROUND_DOWN__, or
+ 237:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    \c __DELAY_ROUND_CLOSEST__, before including this header file, the
+ 238:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    algorithm can be made to round down, or round to closest integer,
+ 239:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    respectively.
+ 240:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 
+ 241:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    \note
+ 242:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 
+ 243:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    The implementation of _delay_ms() based on
+ 244:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    __builtin_avr_delay_cycles() is not backward compatible with older
+ 245:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    implementations.  In order to get functionality backward compatible
+ 246:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    with previous versions, the macro \c __DELAY_BACKWARD_COMPATIBLE__
+ 247:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    must be defined before including this header file. Also, the
+ 248:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    backward compatible algorithm will be chosen if the code is
+ 249:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    compiled in a <em>freestanding environment</em> (GCC option
+ 250:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    \c -ffreestanding), as the math functions required for rounding are
+ 251:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****    not available to the compiler then.
+ 252:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 
+ 253:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****  */
+ 254:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** void
+ 255:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** _delay_us(double __us)
+ 117               		.loc 2 255 1 view .LVU27
+ 118               	.LBB6:
+ 256:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** {
+ 257:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 	double __tmp ;
+ 119               		.loc 2 257 2 view .LVU28
+ 258:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** #if __HAS_DELAY_CYCLES && defined(__OPTIMIZE__) && \
+ 259:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****   !defined(__DELAY_BACKWARD_COMPATIBLE__) &&	   \
+ 260:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h ****   __STDC_HOSTED__
+ 261:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 	uint32_t __ticks_dc;
+ 120               		.loc 2 261 2 view .LVU29
+ 262:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 	extern void __builtin_avr_delay_cycles(unsigned long);
+ 121               		.loc 2 262 2 view .LVU30
+ 263:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 	__tmp = ((F_CPU) / 1e6) * __us;
+ 122               		.loc 2 263 2 view .LVU31
+ 264:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 
+ 265:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 	#if defined(__DELAY_ROUND_DOWN__)
+ 266:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 		__ticks_dc = (uint32_t)fabs(__tmp);
+ 267:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 
+ 268:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 	#elif defined(__DELAY_ROUND_CLOSEST__)
+ 269:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 		__ticks_dc = (uint32_t)(fabs(__tmp)+0.5);
+ 270:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 
+ 271:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 	#else
+ 272:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 		//round up by default
+ 273:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 		__ticks_dc = (uint32_t)(ceil(fabs(__tmp)));
+ 123               		.loc 2 273 3 view .LVU32
+ 274:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 	#endif
+ 275:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 
+ 276:/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/util/delay.h **** 	__builtin_avr_delay_cycles(__ticks_dc);
+ 124               		.loc 2 276 2 view .LVU33
+ 125 0056 F5E0      		ldi r31,lo8(5)
+ 126 0058 FA95      	1:	dec r31
+ 127 005a 01F4      		brne 1b
+ 128 005c 0000      		nop
+ 129               	.LVL10:
+ 130               		.loc 2 276 2 is_stmt 0 view .LVU34
+ 131               	.LBE6:
+ 132               	.LBE5:
+  96:mcp2515_send_message.c **** 	
+  97:mcp2515_send_message.c **** 	// CAN Nachricht verschicken
+  98:mcp2515_send_message.c **** 	// die letzten drei Bit im RTS Kommando geben an welcher
+  99:mcp2515_send_message.c **** 	// Puffer gesendet werden soll.
+ 100:mcp2515_send_message.c **** 	RESET(MCP2515_CS);
+ 133               		.loc 1 100 2 is_stmt 1 view .LVU35
+ 134 005e C098      		cbi 0x18,0
+ 101:mcp2515_send_message.c **** 	address = (address == 0) ? 1 : address;
+ 135               		.loc 1 101 2 view .LVU36
+ 136 0060 C111      		cpse r28,__zero_reg__
+ 137 0062 00C0      		rjmp .L8
+ 138 0064 C1E0      		ldi r28,lo8(1)
+ 139               	.LVL11:
+ 140               	.L8:
+ 102:mcp2515_send_message.c **** 	spi_putc(SPI_RTS | address);
+ 141               		.loc 1 102 2 view .LVU37
+ 142 0066 8C2F      		mov r24,r28
+ 143 0068 8068      		ori r24,lo8(-128)
+ 144 006a 0E94 0000 		call spi_putc
+ 145               	.LVL12:
+ 103:mcp2515_send_message.c **** 	SET(MCP2515_CS);
+ 146               		.loc 1 103 2 view .LVU38
+ 147 006e C09A      		sbi 0x18,0
+ 104:mcp2515_send_message.c **** 	
+ 105:mcp2515_send_message.c **** 	CAN_INDICATE_TX_TRAFFIC_FUNCTION;
+ 148               		.loc 1 105 34 view .LVU39
+ 106:mcp2515_send_message.c **** 	
+ 107:mcp2515_send_message.c **** 	return address;
+ 149               		.loc 1 107 2 view .LVU40
+ 150               	.LVL13:
+ 151               	.L1:
+ 108:mcp2515_send_message.c **** }
+ 152               		.loc 1 108 1 is_stmt 0 view .LVU41
+ 153 0070 8C2F      		mov r24,r28
+ 154               	/* epilogue start */
+ 155 0072 DF91      		pop r29
+ 156 0074 CF91      		pop r28
+ 157 0076 1F91      		pop r17
+ 158 0078 0F91      		pop r16
+ 159 007a FF90      		pop r15
+ 160 007c 0895      		ret
+ 161               	.LVL14:
+ 162               	.L4:
+  86:mcp2515_send_message.c **** 		
+ 163               		.loc 1 86 3 is_stmt 1 view .LVU42
+ 164 007e 8D2F      		mov r24,r29
+ 165 0080 0E94 0000 		call spi_putc
+ 166               	.LVL15:
+  89:mcp2515_send_message.c **** 			spi_putc(msg->data[i]);
+ 167               		.loc 1 89 3 view .LVU43
+ 168               	.LBB7:
+  89:mcp2515_send_message.c **** 			spi_putc(msg->data[i]);
+ 169               		.loc 1 89 8 view .LVU44
+  89:mcp2515_send_message.c **** 			spi_putc(msg->data[i]);
+ 170               		.loc 1 89 8 is_stmt 0 view .LVU45
+ 171 0084 0C5F      		subi r16,-4
+ 172 0086 1F4F      		sbci r17,-1
+ 173               	.LVL16:
+ 174               	.L6:
+  89:mcp2515_send_message.c **** 			spi_putc(msg->data[i]);
+ 175               		.loc 1 89 20 is_stmt 1 discriminator 1 view .LVU46
+  89:mcp2515_send_message.c **** 			spi_putc(msg->data[i]);
+ 176               		.loc 1 89 3 is_stmt 0 discriminator 1 view .LVU47
+ 177 0088 FD16      		cp r15,r29
+ 178 008a 01F0      		breq .L5
+  90:mcp2515_send_message.c **** 		}
+ 179               		.loc 1 90 4 is_stmt 1 discriminator 3 view .LVU48
+ 180 008c F801      		movw r30,r16
+ 181 008e 8191      		ld r24,Z+
+ 182 0090 8F01      		movw r16,r30
+ 183 0092 0E94 0000 		call spi_putc
+ 184               	.LVL17:
+  89:mcp2515_send_message.c **** 			spi_putc(msg->data[i]);
+ 185               		.loc 1 89 29 discriminator 3 view .LVU49
+  89:mcp2515_send_message.c **** 			spi_putc(msg->data[i]);
+ 186               		.loc 1 89 30 is_stmt 0 discriminator 3 view .LVU50
+ 187 0096 F394      		inc r15
+ 188               	.LVL18:
+  89:mcp2515_send_message.c **** 			spi_putc(msg->data[i]);
+ 189               		.loc 1 89 30 discriminator 3 view .LVU51
+ 190 0098 00C0      		rjmp .L6
+ 191               	.LBE7:
+ 192               		.cfi_endproc
+ 193               	.LFE19:
+ 195               	.Letext0:
+ 196               		.file 3 "/opt/homebrew/Cellar/avr-gcc@9/9.3.0_3/avr/include/stdint.h"
+ 197               		.file 4 "../can.h"
+ 198               		.file 5 "spi.h"
+ 199               		.file 6 "mcp2515_private.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 mcp2515_send_message.c
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:2      *ABS*:000000000000003e __SP_H__
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:3      *ABS*:000000000000003d __SP_L__
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:4      *ABS*:000000000000003f __SREG__
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:5      *ABS*:0000000000000000 __tmp_reg__
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:6      *ABS*:0000000000000001 __zero_reg__
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:12     .text:0000000000000000 can_send_message
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:16     .text:0000000000000000 .Loc.0
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:17     .text:0000000000000000 L0
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:18     .text:0000000000000000 .Loc.1
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:44     .text:000000000000000c .Loc.2
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:45     .text:000000000000000c .Loc.3
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:48     .text:000000000000000e .Loc.4
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:51     .text:0000000000000012 .Loc.5
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:52     .text:0000000000000012 .Loc.6
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:53     .text:0000000000000012 .Loc.7
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:58     .text:000000000000001a .Loc.8
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:59     .text:000000000000001a .Loc.9
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:62     .text:000000000000001e .Loc.10
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:63     .text:000000000000001e .Loc.11
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:65     .text:0000000000000020 .Loc.12
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:68     .text:0000000000000024 .Loc.13
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:72     .text:0000000000000028 .Loc.14
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:76     .text:000000000000002a .Loc.15
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:78     .text:000000000000002c .Loc.16
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:81     .text:000000000000002e .Loc.17
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:85     .text:0000000000000034 .Loc.18
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:89     .text:000000000000003a .Loc.19
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:90     .text:000000000000003a .Loc.20
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:95     .text:0000000000000040 .Loc.21
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:96     .text:0000000000000040 .Loc.22
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:98     .text:0000000000000042 .Loc.23
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:104    .text:000000000000004c .Loc.24
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:110    .text:0000000000000054 .Loc.25
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:112    .text:0000000000000056 .Loc.26
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:117    .text:0000000000000056 .Loc.27
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:119    .text:0000000000000056 .Loc.28
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:120    .text:0000000000000056 .Loc.29
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:121    .text:0000000000000056 .Loc.30
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:122    .text:0000000000000056 .Loc.31
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:123    .text:0000000000000056 .Loc.32
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:124    .text:0000000000000056 .Loc.33
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:130    .text:000000000000005e .Loc.34
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:133    .text:000000000000005e .Loc.35
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:135    .text:0000000000000060 .Loc.36
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:141    .text:0000000000000066 .Loc.37
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:146    .text:000000000000006e .Loc.38
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:148    .text:0000000000000070 .Loc.39
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:149    .text:0000000000000070 .Loc.40
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:152    .text:0000000000000070 .Loc.41
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:163    .text:000000000000007e .Loc.42
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:167    .text:0000000000000084 .Loc.43
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:169    .text:0000000000000084 .Loc.44
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:170    .text:0000000000000084 .Loc.45
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:175    .text:0000000000000088 .Loc.46
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:176    .text:0000000000000088 .Loc.47
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:179    .text:000000000000008c .Loc.48
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:185    .text:0000000000000096 .Loc.49
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:186    .text:0000000000000096 .Loc.50
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:189    .text:0000000000000098 .Loc.51
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:192    .text:000000000000009a L0
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:200    .text:000000000000009a L0
+                     .debug_frame:0000000000000000 L0
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:74     .text:000000000000002a .L2
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:71     .text:0000000000000028 .L9
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:151    .text:0000000000000070 .L1
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:162    .text:000000000000007e .L4
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:126    .text:0000000000000058 .L11
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:140    .text:0000000000000066 .L8
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:109    .text:0000000000000054 .L5
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:174    .text:0000000000000088 .L6
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:580    .debug_abbrev:0000000000000000 .Ldebug_abbrev0
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:8      .text:0000000000000000 .Ltext0
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:195    .text:000000000000009a .Letext0
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:1221   .debug_line:0000000000000000 .Ldebug_line0
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:14     .text:0000000000000000 .LFB19
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:193    .text:000000000000009a .LFE19
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:1020   .debug_loc:0000000000000000 .LLST0
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:1070   .debug_loc:0000000000000060 .LLST1
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:1059   .debug_loc:0000000000000056 .LVUS1
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:1117   .debug_loc:00000000000000b6 .LLST2
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:1114   .debug_loc:00000000000000b4 .LVUS2
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:1129   .debug_loc:00000000000000cd .LLST3
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:1124   .debug_loc:00000000000000c9 .LVUS3
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:1145   .debug_loc:00000000000000ef .LLST4
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:1140   .debug_loc:00000000000000eb .LVUS4
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:168    .text:0000000000000084 .LBB7
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:191    .text:000000000000009a .LBE7
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:1161   .debug_loc:0000000000000111 .LLST8
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:1156   .debug_loc:000000000000010d .LVUS8
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:184    .text:0000000000000096 .LVL17
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:115    .text:0000000000000056 .LBI5
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:114    .text:0000000000000056 .LBB5
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:132    .text:000000000000005e .LBE5
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:1176   .debug_loc:0000000000000132 .LLST5
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:1173   .debug_loc:0000000000000130 .LVUS5
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:1188   .debug_loc:000000000000014c .LLST6
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:1185   .debug_loc:000000000000014a .LVUS6
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:1200   .debug_loc:0000000000000166 .LLST7
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:1197   .debug_loc:0000000000000164 .LVUS7
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:50     .text:0000000000000012 .LVL2
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:84     .text:0000000000000034 .LVL5
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:88     .text:000000000000003a .LVL6
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:108    .text:0000000000000054 .LVL8
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:145    .text:000000000000006e .LVL12
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:166    .text:0000000000000084 .LVL15
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:20     .text:0000000000000002 .LCFI0
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:24     .text:0000000000000004 .LCFI1
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:28     .text:0000000000000006 .LCFI2
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:32     .text:0000000000000008 .LCFI3
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:36     .text:000000000000000a .LCFI4
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:13     .text:0000000000000000 .LVL0
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:47     .text:000000000000000e .LVL1
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:161    .text:000000000000007e .LVL14
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:173    .text:0000000000000088 .LVL16
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:80     .text:000000000000002e .LVL4
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:75     .text:000000000000002a .LVL3
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:150    .text:0000000000000070 .LVL13
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:94     .text:0000000000000040 .LVL7
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:113    .text:0000000000000056 .LVL9
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:129    .text:000000000000005e .LVL10
+/var/folders/t1/hcvhy4kn4wqf61nvgxt8qfpc0000gn/T//ccCIsCBa.s:201    .debug_info:0000000000000000 .Ldebug_info0
+
+UNDEFINED SYMBOLS
+mcp2515_read_status
+spi_putc
+mcp2515_write_id

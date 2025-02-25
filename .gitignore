@@ -1,0 +1,10 @@
+.vscode/**
+.dep/**
+obj/**
+*.eep
+*.elf
+*.hex
+*.lss
+*.map
+*.sym
+.DS_Store
