@@ -163,3 +163,27 @@ void counter1DisableCompareMatchInterrupt() {
 void counter2DisableCompareMatchInterrupt() {
     clrBit(TIMSK, OCIE2);
 }
+
+void counter0EnableCTC(void) {
+    setBit(TCCR0, WGM01);
+}
+
+void counter1EnableCTC(void) {
+    setBit(TCCR1B, WGM12);
+}
+
+void counter2EnableCTC(void) {
+    setBit(TCCR2, WGM21);
+}
+
+void counter0DisableCTC(void) {
+    clrBit(TCCR0, WGM01);
+}
+
+void counter1DisableCTC(void) {
+    clrBit(TCCR1B, WGM12);
+}
+
+void counter2DisableCTC(void) {
+    clrBit(TCCR2, WGM21);
+}

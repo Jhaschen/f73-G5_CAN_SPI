@@ -105,6 +105,20 @@ void counter0DisableCompareMatchInterrupt(void);
 void counter1DisableCompareMatchInterrupt(void);
 void counter2DisableCompareMatchInterrupt(void);
 
+/**
+ * Enable clear timer on compare match (CTC mode)
+*/
+void counter0EnableCTC(void);
+void counter1EnableCTC(void);
+void counter2EnableCTC(void);
+
+/**
+ * Disable clear timer on compare match (CTC mode)
+*/
+void counter0DisableCTC(void);
+void counter1DisableCTC(void);
+void counter2DisableCTC(void);
+
 #ifdef __cplusplus
 }
 #endif
